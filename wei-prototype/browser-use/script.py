@@ -14,8 +14,8 @@ PPL = 2
 LOCATION = "San Francisco"
 INBOX_ID = "opentable_2@agentmail.to"
 PHONE = "+18777804236"
-FIRST_NAME = ""
-LAST_NAME = ""
+FIRST_NAME = "WAGENT"
+LAST_NAME = "SRY"
 
 # Create controller instance for custom functions
 controller = Controller()
@@ -63,7 +63,11 @@ async def main():
        - Use the "Get verification code from email" action to retrieve the code from email
        - Enter the verification code to complete the reservation
        - If no code is found, wait a moment and try the action again (emails may take time to arrive)
-    6. Complete the reservation and return the final confirmation details including:
+    6. If prompted for personal info:
+       - Phone number: {PHONE} (+1 is USA Country Code)
+       - FIRST_NAME: {FIRST_NAME}
+       - LAST_NAME {LAST_NAME}
+    7. Complete the reservation and return the final confirmation details including:
        - Restaurant name and location
        - Reservation date and time
        - Number of people
