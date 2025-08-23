@@ -24,12 +24,13 @@ DATE = "2025-08-31"
 TIME = "7PM"
 PPL = 2
 LOCATION = "San Francisco"
+INBOX_ID = "opentable@agentmail.to"
 
 
 task_details = f"""
     1. Go to opentable.com
     2. Search for available restaurant on {DATE} at {TIME} with {PPL} people in {LOCATION}
-    3. Return the top 5 results in JSON format (just the resttaurant name)
+    3. Select the 1st restaurant from the result and use email {INBOX_ID} to make the reservation
 """
 
 
@@ -60,7 +61,7 @@ if task_status.status == "finished":
     # Check if task was successful
     if hasattr(task_status, "isSuccess") and task_status.isSuccess:
         print("Task completed successfully!")
-        
+
         # Get the final output
         if hasattr(task_status, "doneOutput") and task_status.doneOutput:
             print(f"Restaurant Results:\n{task_status.doneOutput}")
@@ -73,8 +74,10 @@ if task_status.status == "finished":
 
     # Show output files (screenshots, etc.)
     if hasattr(task_status, "outputFiles") and task_status.outputFiles:
-        print(f"Generated {len(task_status.outputFiles)} output files - check Browser Use dashboard")
-    
+        print(
+            f"Generated {len(task_status.outputFiles)} output files - check Browser Use dashboard"
+        )
+
     print("Check your Browser Use dashboard for screenshots and detailed results")
 else:
     print(f"Task ended with status: {task_status.status}")
