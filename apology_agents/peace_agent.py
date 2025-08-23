@@ -2,8 +2,9 @@ from agents import Agent, Runner, function_tool
 from typing import List, Dict, Any, Optional
 import json
 import asyncio
+import os
 
-from models.apology_context import ApologyContext, ApologyResponse, Action, ActionType
+from models.apology_context import ApologyContext, ApologyResponse, Action, ActionType, RelationshipType
 from tools.gift_finder import search_gifts, search_amazon
 from tools.restaurant_booker import find_restaurants, make_reservation
 from tools.flower_delivery import find_flower_options
@@ -59,7 +60,7 @@ class PeaceOfferingAgent:
         Analyze this situation requiring an apology:
         
         Situation: {context.situation}
-        Recipient: {context.recipient_name} ({context.relationship_type})
+        Recipient: {context.recipient_name} ({context.relationship_type.value})
         Severity: {context.severity}/10
         Budget: ${context.budget or 'flexible'}
         Location: {context.location or 'not specified'}
@@ -85,7 +86,7 @@ class PeaceOfferingAgent:
         Create a comprehensive apology strategy for this situation:
         
         Context: {context.situation}
-        Relationship: {context.relationship_type} with {context.recipient_name}
+        Relationship: {context.relationship_type.value} with {context.recipient_name}
         Analysis: {analysis}
         Budget: ${context.budget or 'flexible'}
         Location: {context.location or 'anywhere'}
@@ -105,7 +106,7 @@ class PeaceOfferingAgent:
         Write a sincere, personalized apology message for:
         
         Situation: {context.situation}
-        Recipient: {context.recipient_name} ({context.relationship_type})
+        Recipient: {context.recipient_name} ({context.relationship_type.value})
         Tone: {analysis.get('recommended_approach', 'heartfelt and direct')}
         
         The message should:
@@ -142,7 +143,7 @@ class PeaceOfferingAgent:
         # Parse and structure the response
         actions = self._parse_actions(strategy_result.final_output, action_result.final_output, context)
         
-        return ApologyResponse(
+        response = ApologyResponse(
             apology_message=message_result.final_output.strip(),
             strategy_explanation=self._extract_strategy_explanation(strategy_result.final_output),
             recommended_actions=actions,
@@ -150,6 +151,14 @@ class PeaceOfferingAgent:
             success_probability=self._estimate_success_probability(context, analysis),
             follow_up_suggestions=self._generate_followup_suggestions(context, analysis)
         )
+
+        # Best-effort logging to Convex, off-thread and non-blocking
+        try:
+            await self._log_to_convex(context, response)
+        except Exception:
+            pass
+        
+        return response
 
     def _parse_actions(self, strategy_output: str, action_output: str, context: ApologyContext) -> List[Action]:
         # Parse the strategy and action outputs to create structured Action objects
@@ -212,10 +221,10 @@ class PeaceOfferingAgent:
         
         # Adjust based on relationship type
         relationship_bonuses = {
-            "romantic": 0.1,  # High stakes but high reward
-            "family": 0.15,   # Family tends to forgive
-            "friend": 0.1,
-            "colleague": -0.1  # Professional relationships are trickier
+            RelationshipType.ROMANTIC: 0.1,  # High stakes but high reward
+            RelationshipType.FAMILY: 0.15,   # Family tends to forgive
+            RelationshipType.FRIEND: 0.1,
+            RelationshipType.COLLEAGUE: -0.1  # Professional relationships are trickier
         }
         
         base_probability += relationship_bonuses.get(context.relationship_type, 0)
@@ -232,7 +241,108 @@ class PeaceOfferingAgent:
         if context.severity >= 7:
             suggestions.append("Consider couples/family counseling if appropriate")
             
-        if context.relationship_type in ["romantic", "family"]:
+        if context.relationship_type in [RelationshipType.ROMANTIC, RelationshipType.FAMILY]:
             suggestions.append("Plan regular check-ins to rebuild trust over time")
             
         return suggestions
+
+    async def _log_to_convex(self, context: ApologyContext, response: ApologyResponse) -> None:
+        # Run synchronous logging in a separate thread to avoid blocking
+        await asyncio.to_thread(self._log_to_convex_sync, context, response)
+
+    def _log_to_convex_sync(self, context: ApologyContext, response: ApologyResponse) -> None:
+        url = os.getenv("CONVEX_URL")
+        if not url:
+            return
+        try:
+            import convex  # type: ignore
+        except Exception:
+            return
+        try:
+            client = convex.ConvexClient(url)
+            admin_key = os.getenv("CONVEX_ADMIN_KEY")
+            token = os.getenv("CONVEX_TOKEN")
+            if admin_key:
+                client.set_admin_auth(admin_key)
+            elif token:
+                client.set_auth(token)
+
+            payload: Dict[str, Any] = {
+                "context": {
+                    "situation": context.situation,
+                    "recipient_name": context.recipient_name,
+                    "relationship_type": context.relationship_type.value,
+                    "severity": context.severity,
+                    "recipient_preferences": context.recipient_preferences,
+                    "budget": context.budget,
+                    "location": context.location,
+                },
+                "response": {
+                    "apology_message": response.apology_message,
+                    "strategy_explanation": response.strategy_explanation,
+                    "recommended_actions": [
+                        {
+                            "type": a.type.value,
+                            "description": a.description,
+                            "estimated_cost": a.estimated_cost,
+                            "execution_details": a.execution_details,
+                            "priority": a.priority,
+                        }
+                        for a in response.recommended_actions
+                    ],
+                    "estimated_total_cost": response.estimated_total_cost,
+                    "success_probability": response.success_probability,
+                    "follow_up_suggestions": response.follow_up_suggestions,
+                },
+                "timestamp": __import__("time").time(),
+                "version": "1.0.0",
+            }
+
+            # Ensure payload stays under Convex value (~1 MiB) limits by truncating if needed
+            try:
+                def _truncate_str(s: Any, max_len: int) -> Any:
+                    if isinstance(s, str) and len(s) > max_len:
+                        return s[:max_len] + "…"
+                    return s
+
+                raw = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+                if len(raw) > 900_000:  # ~0.9 MiB safety threshold
+                    # First pass: trim large string fields and action count
+                    payload["response"]["apology_message"] = _truncate_str(payload["response"].get("apology_message"), 4000)
+                    payload["response"]["strategy_explanation"] = _truncate_str(payload["response"].get("strategy_explanation"), 2000)
+
+                    actions = payload["response"].get("recommended_actions", [])[:3]
+                    for a in actions:
+                        a["description"] = _truncate_str(a.get("description"), 500)
+                    payload["response"]["recommended_actions"] = actions
+
+                    raw = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+
+                if len(raw) > 900_000:
+                    # Second pass: drop execution_details from actions
+                    for a in payload["response"].get("recommended_actions", []):
+                        a.pop("execution_details", None)
+                    raw = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+
+                if len(raw) > 900_000:
+                    # Third pass: remove recipient_preferences (can be large)
+                    payload["context"]["recipient_preferences"] = None
+                    raw = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+
+                if len(raw) > 900_000:
+                    # Still too large: skip logging to avoid mutation failure
+                    return
+            except Exception:
+                # If size checks fail for any reason, proceed without blocking
+                pass
+
+            # This expects a Convex mutation named "logs:addApology" in your backend.
+            # Adjust the function name to your deployment.
+            try:
+                client.mutation("logs:addApology", payload)
+            except Exception:
+                # Ignore logging failures entirely
+                pass
+        except Exception:
+            # Swallow any unexpected errors to avoid impacting main flow
+            return

@@ -1,12 +1,12 @@
-# 🕊️ Apology Agent
+# Apology Agent
 
 A sophisticated AI-powered system that helps create personalized apology strategies and reconciliation plans for various relationship situations.
 
-## 📖 Overview
+## Overview
 
 The Apology Agent is designed to assist users in crafting meaningful apologies by analyzing the context of a situation, understanding recipient preferences, and generating comprehensive reconciliation strategies that include personalized messages, gift recommendations, and thoughtful gestures.
 
-## ✨ Features
+## Features
 
 - **🖥️ Beautiful Web Dashboard**: User-friendly interface for creating apologies without coding
 - **Personalized Apology Messages**: Generate heartfelt, context-aware apology messages
@@ -16,7 +16,7 @@ The Apology Agent is designed to assist users in crafting meaningful apologies b
 - **Budget Management**: Work within specified budget constraints
 - **Location-Aware Suggestions**: Tailored recommendations based on geographic location
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -98,7 +98,7 @@ The Apology Agent includes a beautiful, user-friendly web dashboard for creating
 
 The dashboard comes pre-filled with example data for easy testing. You can modify any field or start with a completely new situation.
 
-## 📡 API Usage
+## API Usage
 
 ### Create Apology Endpoint
 
@@ -142,7 +142,7 @@ curl -X POST "http://localhost:8000/create-apology" \
   }'
 ```
 
-## 🏗️ Architecture
+## Architecture
 
 ### Core Components
 
@@ -162,7 +162,7 @@ ApologyAgent/
 └── requirements.txt    # Python dependencies
 ```
 
-## 🛠️ Configuration
+## Configuration
 
 The system can be configured through environment variables or configuration files. Key settings include:
 
@@ -171,7 +171,7 @@ The system can be configured through environment variables or configuration file
 - Location-based service availability
 - AI model parameters
 
-## 🤝 Contributing
+## Contributing
 
 We welcome contributions! Please feel free to submit pull requests or open issues for bugs and feature requests.
 
@@ -184,7 +184,7 @@ We welcome contributions! Please feel free to submit pull requests or open issue
 5. Submit a pull request
 
 
-## 🔮 Roadmap
+## Roadmap
 
 - [ ] Enhanced AI models for better apology generation
 - [ ] Integration with more gift and service providers
@@ -195,3 +195,73 @@ We welcome contributions! Please feel free to submit pull requests or open issue
 ---
 
 **Note:** This is a demonstration project. For production use, please ensure proper security measures and API key management.
+
+## Setup with Poetry or uv (preferred)
+
+- __Poetry__
+  - Install: `pipx install poetry`
+  - Install deps: `poetry install`
+  - Run: `poetry run python start.py`
+
+- __uv__
+  - Install: `pipx install uv`
+  - Create venv: `uv venv`
+  - Install deps: `uv pip install -r requirements.txt`
+  - Run: `uv run python start.py`
+
+Note: This repo currently includes `requirements.txt` for convenience, but Poetry/uv are the preferred tooling.
+
+## Optional: Convex logging integration
+
+This project can log requests/responses to a Convex backend if configured.
+
+- __Configure environment__ in `.env` (see `.env.example`):
+  - `CONVEX_URL=https://<your>.convex.cloud`
+  - `CONVEX_ADMIN_KEY=...` (preferred for server) or `CONVEX_TOKEN=...`
+
+- __Install Python client__ (already referenced in `requirements.txt`): `convex`
+
+- __Create a Convex project__ (Node 18+, NPM):
+  - `npm create convex@latest`
+  - `npm install`
+
+- __Define schema__ at `convex/schema.ts`:
+```ts
+import { defineSchema, defineTable, v } from "convex/schema";
+
+export default defineSchema({
+  logs: defineTable({
+    timestamp: v.number(),
+    version: v.string(),
+    context: v.any(),
+    response: v.any(),
+  }).index("by_timestamp", ["timestamp"]),
+});
+```
+
+- __Add mutation__ at `convex/logs.ts`:
+```ts
+import { mutation } from "./_generated/server";
+import { v } from "convex/values";
+
+export const addApology = mutation({
+  args: {
+    timestamp: v.number(),
+    version: v.string(),
+    context: v.any(),
+    response: v.any(),
+  },
+  handler: async (ctx, args) => {
+    const id = await ctx.db.insert("logs", args);
+    return { id };
+  },
+});
+```
+
+- __Run Convex locally__:
+  - `npx convex dev` (requires login and project setup)
+
+- __Python side__:
+  - `apology_agents/peace_agent.py` will best-effort call `client.mutation("logs:addApology", payload)` when env vars are present. Failures are ignored so your main flow is not impacted.
+
+Security: Do not log sensitive content. Admin keys must not be exposed client-side.
