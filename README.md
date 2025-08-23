@@ -8,6 +8,7 @@ The Apology Agent is designed to assist users in crafting meaningful apologies b
 
 ## ✨ Features
 
+- **🖥️ Beautiful Web Dashboard**: User-friendly interface for creating apologies without coding
 - **Personalized Apology Messages**: Generate heartfelt, context-aware apology messages
 - **Smart Gift Recommendations**: AI-powered gift suggestions based on recipient preferences
 - **Restaurant Booking**: Find and book appropriate dining venues for reconciliation
@@ -40,13 +41,70 @@ pip install -r requirements.txt
 python start.py
 ```
 
-The API will be available at `http://localhost:8000`
+The server will be available at `http://localhost:8000`
+
+## 🖥️ Dashboard Access
+
+### Web Interface
+
+The Apology Agent includes a beautiful, user-friendly web dashboard for creating apologies without using the command line.
+
+#### Access the Dashboard
+
+1. **Start the server** (if not already running):
+   ```bash
+   python start.py
+   ```
+
+2. **Open your web browser** and navigate to:
+   ```
+   http://localhost:8000/
+   ```
+
+3. **Alternative dashboard URL**:
+   ```
+   http://localhost:8000/dashboard
+   ```
+
+#### Dashboard Features
+
+- **📝 Apology Details Form** - Easy input for all required fields
+- **🎁 Recipient Preferences** - Capture personal details for better recommendations
+- **🕊️ One-Click Generation** - Generate apology strategies with a single button
+- **✨ Beautiful Response Display** - Formatted, easy-to-read apology plans
+- **📱 Responsive Design** - Works perfectly on desktop and mobile devices
+
+#### Using the Dashboard
+
+1. **Fill out the form** with your situation details:
+   - What happened (required)
+   - Recipient's name (required)
+   - Relationship type (required)
+   - Severity level 1-10 (required)
+   - Budget (required)
+   - Location (required)
+   - Recipient preferences (optional)
+
+2. **Click "🕊️ Generate Apology Strategy"**
+
+3. **View your personalized apology plan** including:
+   - Personalized apology message
+   - Strategy explanation
+   - Recommended actions with costs
+   - Success probability
+   - Follow-up suggestions
+
+#### Pre-filled Example
+
+The dashboard comes pre-filled with example data for easy testing. You can modify any field or start with a completely new situation.
 
 ## 📡 API Usage
 
 ### Create Apology Endpoint
 
 **Endpoint:** `POST /create-apology`
+
+> **💡 Tip:** For a user-friendly interface, use the [Dashboard](#-dashboard-access) instead of direct API calls.
 
 **Request Body:**
 ```json
