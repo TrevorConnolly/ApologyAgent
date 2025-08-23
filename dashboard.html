@@ -231,11 +231,11 @@
       font-size:13px;
     }
     /* Make the entire right column scrollable and keep voice section at bottom */
-    .right-col{ display:flex; flex-direction:column; height: calc(100vh - 160px); }
-    .right-col .preview{ flex:1; overflow:auto; }
+    .right-col{ display:flex; flex-direction:column; height: calc(100vh - 160px); min-height: 0; }
+    .right-col .preview{ flex:1; overflow:auto; min-height:0; -webkit-overflow-scrolling: touch; }
     /* Mirror for left column so voice dock sits at bottom-left */
-    .left-col{ display:flex; flex-direction:column; height: calc(100vh - 160px); }
-    .left-col .content{ flex:1; overflow:auto; }
+    .left-col{ display:flex; flex-direction:column; height: calc(100vh - 160px); min-height: 0; }
+    .left-col .content{ flex:1; overflow:auto; min-height:0; -webkit-overflow-scrolling: touch; }
     /* Bottom dock for voice section */
     .voice-dock{ border-top: 1px solid rgba(255,255,255,.08); padding:18px; }
     @media (max-width: 960px){ .right-col{ height:auto; } .left-col{ height:auto; } }
