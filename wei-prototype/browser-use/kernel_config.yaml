@@ -1,0 +1,274 @@
+# Kernel Platform Deployment Configuration
+# Restaurant Reservation Agent - Production Ready
+
+# Application metadata
+name: restaurant-reservation-agent
+version: "1.0.0"
+description: "Production-ready restaurant reservation agent using Browser Use and OpenTable"
+
+# Runtime configuration
+runtime:
+  python_version: "3.11"
+  memory_limit: "2Gi"
+  cpu_limit: "1000m"
+  timeout: 300  # 5 minutes max execution time
+  concurrency: 5  # Maximum concurrent reservations
+  
+# Environment configuration
+environment:
+  # Production environment settings
+  BROWSER_USE_HEADLESS: "true"
+  BROWSER_USE_LOGGING_LEVEL: "info"
+  PLAYWRIGHT_BROWSERS_PATH: "/opt/playwright"
+  
+  # Timeout configurations
+  DEFAULT_TIMEOUT: "30000"
+  MAX_TIMEOUT: "120000"
+  BROWSER_CONNECT_RETRY_DELAY: "2"
+  MAX_RETRIES: "3"
+  
+  # Logging configuration
+  LOG_LEVEL: "INFO"
+  LOG_FORMAT: "json"
+  
+  # Performance tuning
+  BROWSER_MAX_PAGES: "1"
+  BROWSER_MAX_CONTEXTS: "1"
+  
+# Required secrets (must be set in Kernel platform)
+secrets:
+  - name: "OPENAI_API_KEY"
+    description: "OpenAI API key for GPT models"
+    required: true
+    
+  - name: "AGENTMAIL_API_KEY"
+    description: "AgentMail API key for email verification codes"
+    required: true
+    
+  # Optional secrets for enhanced functionality
+  - name: "ANTHROPIC_API_KEY"
+    description: "Anthropic API key for Claude models (optional)"
+    required: false
+    
+  - name: "SENTRY_DSN"
+    description: "Sentry DSN for error tracking (optional)"
+    required: false
+
+# Health check configuration
+health_check:
+  enabled: true
+  endpoint: "health-check"
+  interval: 30  # seconds
+  timeout: 10   # seconds
+  retries: 3
+  initial_delay: 10  # seconds
+
+# Auto-scaling configuration
+scaling:
+  min_instances: 1
+  max_instances: 10
+  target_cpu_utilization: 70
+  target_memory_utilization: 80
+  scale_up_cooldown: 300   # 5 minutes
+  scale_down_cooldown: 600 # 10 minutes
+
+# Browser-specific configuration
+browser_config:
+  # Browser Use configuration
+  max_steps: 50
+  save_conversation: true
+  conversation_retention_days: 7
+  
+  # Browser session settings
+  session_timeout: 180  # 3 minutes
+  page_load_timeout: 30 # seconds
+  navigation_timeout: 30 # seconds
+  
+  # Browser automation settings
+  wait_for_selector_timeout: 10  # seconds
+  screenshot_on_error: true
+  video_recording: false  # Disable for performance
+  
+# Monitoring and observability
+monitoring:
+  # Metrics collection
+  prometheus:
+    enabled: true
+    port: 9090
+    path: "/metrics"
+    
+  # Logging
+  structured_logging: true
+  log_retention_days: 30
+  
+  # Tracing (if using OpenTelemetry)
+  tracing:
+    enabled: false  # Enable if needed
+    sampling_rate: 0.1
+    
+  # Custom metrics to track
+  custom_metrics:
+    - "reservation_success_rate"
+    - "average_completion_time"
+    - "email_verification_success_rate"
+    - "browser_session_duration"
+
+# Network and security configuration
+network:
+  # Allowed domains for outbound requests
+  allowed_domains:
+    - "opentable.com"
+    - "*.opentable.com"
+    - "api.openai.com"
+    - "agentmail.to"
+    - "*.agentmail.to"
+    - "playwright.dev"  # For browser downloads if needed
+    
+  # Rate limiting
+  rate_limits:
+    requests_per_minute: 60
+    requests_per_hour: 500
+    
+  # Security headers
+  security_headers:
+    enable_cors: false
+    enable_csrf_protection: false  # Not needed for this agent
+
+# Data retention and cleanup
+data_management:
+  # Conversation logs
+  conversation_logs:
+    retention_days: 7
+    compress_after_days: 1
+    
+  # Browser session data
+  session_data:
+    retention_hours: 24
+    cleanup_interval_hours: 6
+    
+  # Temporary files
+  temp_files:
+    cleanup_interval_minutes: 30
+    max_age_minutes: 60
+
+# Error handling and recovery
+error_handling:
+  # Retry configuration
+  max_retries: 3
+  initial_retry_delay: 2    # seconds
+  max_retry_delay: 60       # seconds
+  backoff_multiplier: 2.0
+  
+  # Error categorization
+  retryable_errors:
+    - "browser_connection_failed"
+    - "page_load_timeout"
+    - "network_timeout"
+    - "temporary_service_unavailable"
+    
+  non_retryable_errors:
+    - "invalid_credentials"
+    - "validation_error"
+    - "permission_denied"
+    
+  # Circuit breaker configuration
+  circuit_breaker:
+    enabled: true
+    failure_threshold: 5
+    recovery_timeout: 60  # seconds
+    half_open_max_calls: 3
+
+# Deployment strategy
+deployment:
+  strategy: "rolling_update"
+  max_unavailable: "25%"
+  max_surge: "25%"
+  
+  # Pre-deployment checks
+  pre_checks:
+    - "environment_validation"
+    - "dependency_verification"
+    - "browser_availability_check"
+    
+  # Post-deployment validation
+  post_checks:
+    - "health_check_validation"
+    - "smoke_test_execution"
+    - "performance_baseline_check"
+
+# Development and testing overrides
+development:
+  # Override settings for development environment
+  environment:
+    BROWSER_USE_HEADLESS: "false"  # Show browser in development
+    LOG_LEVEL: "DEBUG"
+    
+  # Reduced resource limits for development
+  runtime:
+    memory_limit: "1Gi"
+    cpu_limit: "500m"
+    timeout: 600  # Longer timeout for debugging
+    concurrency: 2
+    
+  # Enhanced monitoring for debugging
+  monitoring:
+    structured_logging: true
+    custom_metrics:
+      - "debug_step_duration"
+      - "browser_action_count"
+
+# Production-specific overrides
+production:
+  # Enhanced resource allocation
+  runtime:
+    memory_limit: "4Gi"
+    cpu_limit: "2000m"
+    
+  # Strict security settings
+  security:
+    enable_secret_scanning: true
+    enforce_https: true
+    
+  # Enhanced monitoring
+  monitoring:
+    prometheus:
+      enabled: true
+    tracing:
+      enabled: true
+      sampling_rate: 0.05  # Lower sampling in production
+      
+  # Backup and recovery
+  backup:
+    conversation_logs: true
+    configuration_snapshots: true
+    retention_days: 30
+
+# Alerting configuration
+alerting:
+  # Error rate alerts
+  error_rate:
+    threshold: 5  # percent
+    window: 300   # 5 minutes
+    severity: "warning"
+    
+  high_error_rate:
+    threshold: 15  # percent
+    window: 180    # 3 minutes
+    severity: "critical"
+    
+  # Response time alerts
+  slow_response:
+    threshold: 60000  # 60 seconds
+    window: 300       # 5 minutes
+    severity: "warning"
+    
+  # Resource utilization alerts
+  high_memory:
+    threshold: 85  # percent
+    window: 300    # 5 minutes
+    severity: "warning"
+    
+  high_cpu:
+    threshold: 90  # percent
+    window: 180    # 3 minutes
+    severity: "critical"
