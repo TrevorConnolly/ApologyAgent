@@ -1,3 +1,6 @@
 node_modules
 .env
 .venv
+
+reservation_conversation.json
+complete_reservation_conversation.json
