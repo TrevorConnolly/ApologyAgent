@@ -73,45 +73,74 @@ if task_status.status == "finished":
 
         # Handle verification code workflow - create new task approach
         print("\n--- Handling verification code workflow ---")
-        
+
         # Check if task is asking for verification
-        if "verification" in str(task_status.doneOutput).lower() or "code" in str(task_status.doneOutput).lower():
-            print("Task indicates verification code is needed. Retrieving code from email...")
-            
+        if (
+            "verification" in str(task_status.doneOutput).lower()
+            or "code" in str(task_status.doneOutput).lower()
+        ):
+            print(
+                "Task indicates verification code is needed. Retrieving code from email..."
+            )
+
             # Get verification code from email first
             try:
                 copy_code = get_copy_code(INBOX_ID)
                 if copy_code:
                     print(f"Found verification code: {copy_code}")
-                    
-                    # Create a new task to complete the verification using the same browser context
+
+                    # Create a new task to complete the verification using the same browser session
                     print("Creating verification completion task...")
                     try:
-                        verification_task = client.tasks.create(
-                            task=f"""
+                        # Try to continue in the same browser session if possible
+                        task_params = {
+                            "task": f"""
                             Continue from the current restaurant reservation where verification code is needed.
                             Enter the verification code: {copy_code}
                             Complete the reservation process and return the final confirmation details.
                             """
-                        )
-                        print(f"Created verification task: {verification_task.id}")
+                        }
                         
+                        # Get session ID from original task creation response
+                        # According to API docs, client.tasks.create() returns object with 'sessionId' property
+                        if hasattr(task, 'sessionId') and task.sessionId:
+                            task_params["browser_settings"] = {
+                                "sessionId": task.sessionId
+                            }
+                            print(f"Continuing with existing session: {task.sessionId}")
+                        else:
+                            print("No session ID available, creating new session")
+                            print(f"Debug - task object: {task}")
+                        
+                        verification_task = client.tasks.create(**task_params)
+                        print(f"Created verification task: {verification_task.id}")
+
                         # Wait for verification task to complete with timeout
                         print("Waiting for verification completion...")
                         verification_timeout = 300  # 5 minutes timeout
                         verification_start_time = time.time()
-                        
+
                         while True:
                             current_time = time.time()
-                            if current_time - verification_start_time > verification_timeout:
+                            if (
+                                current_time - verification_start_time
+                                > verification_timeout
+                            ):
                                 print("❌ Verification task timed out after 5 minutes")
                                 break
-                                
+
                             try:
-                                verification_status = client.tasks.retrieve(verification_task.id)
-                                print(f"Verification task status: {verification_status.status}")
-                                
-                                if verification_status.status in ["finished", "stopped"]:
+                                verification_status = client.tasks.retrieve(
+                                    verification_task.id
+                                )
+                                print(
+                                    f"Verification task status: {verification_status.status}"
+                                )
+
+                                if verification_status.status in [
+                                    "finished",
+                                    "stopped",
+                                ]:
                                     if (
                                         verification_status.status == "finished"
                                         and hasattr(verification_status, "isSuccess")
@@ -122,22 +151,30 @@ if task_status.status == "finished":
                                             hasattr(verification_status, "doneOutput")
                                             and verification_status.doneOutput
                                         ):
-                                            print(f"Verification result: {verification_status.doneOutput}")
+                                            print(
+                                                f"Verification result: {verification_status.doneOutput}"
+                                            )
                                     else:
-                                        print("❌ Verification task did not complete successfully")
+                                        print(
+                                            "❌ Verification task did not complete successfully"
+                                        )
                                         if hasattr(verification_status, "doneOutput"):
-                                            print(f"Verification output: {verification_status.doneOutput}")
+                                            print(
+                                                f"Verification output: {verification_status.doneOutput}"
+                                            )
                                     break
-                                
+
                                 time.sleep(5)
                             except Exception as e:
-                                print(f"❌ Error checking verification task status: {e}")
+                                print(
+                                    f"❌ Error checking verification task status: {e}"
+                                )
                                 time.sleep(10)
-                                
+
                     except Exception as e:
                         print(f"❌ Error creating verification task: {e}")
                         print("Manual verification may be required")
-                        
+
                 else:
                     print("❌ No verification code found in email. Possible causes:")
                     print("  - Email hasn't arrived yet")
@@ -145,7 +182,7 @@ if task_status.status == "finished":
                     print("  - Incorrect inbox ID")
                     print("  - Email doesn't contain expected verification code format")
                     print("  - Try running the script again in a few moments")
-                    
+
             except Exception as e:
                 print(f"❌ Error retrieving verification code: {e}")
                 print("Manual verification may be required")
