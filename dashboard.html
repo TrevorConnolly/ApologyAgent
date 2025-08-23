@@ -4,6 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🕊️ Apology Agent Dashboard</title>
+    <script type="module">
+        // Load Vapi SDK dynamically
+        window.loadVapiSDK = async function() {
+            try {
+                const { Vapi } = await import('https://cdn.skypack.dev/@vapi-ai/web');
+                window.Vapi = Vapi;
+                return true;
+            } catch (error) {
+                console.warn('Vapi SDK failed to load:', error);
+                return false;
+            }
+        };
+    </script>
     <style>
         * {
             margin: 0;
@@ -236,6 +249,292 @@
             display: none;
         }
 
+        .review-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .tab-btn {
+            padding: 12px 20px;
+            border: none;
+            background: transparent;
+            color: #6c757d;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-btn:hover {
+            color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 20px 0;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .voice-practice-container {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .practice-instructions {
+            text-align: center;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+        }
+
+        .practice-instructions h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.3rem;
+        }
+
+        .practice-instructions p {
+            margin: 0;
+            opacity: 0.9;
+        }
+
+        .audio-recorder {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            border: 2px solid #e9ecef;
+            transition: border-color 0.3s ease;
+        }
+
+        .audio-recorder.recording {
+            border-color: #28a745;
+            background: #f8fff8;
+        }
+
+        .record-btn {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            border-radius: 60px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+            min-width: 200px;
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.2);
+        }
+
+        .record-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 25px rgba(220, 53, 69, 0.4);
+        }
+
+        .record-btn.recording {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            animation: pulse 2s infinite;
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        .record-btn.processing {
+            background: linear-gradient(135deg, #ffc107, #ffb302);
+            cursor: not-allowed;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1) translateY(-3px); }
+            50% { transform: scale(1.05) translateY(-3px); }
+            100% { transform: scale(1) translateY(-3px); }
+        }
+
+        .recording-status {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #6c757d;
+            min-height: 25px;
+            margin-bottom: 10px;
+        }
+
+        .recording-status.recording {
+            color: #28a745;
+        }
+
+        .recording-timer {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #dc3545;
+            font-family: 'Courier New', monospace;
+            min-height: 30px;
+        }
+
+        .quick-tips {
+            background: #fff3cd;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #ffc107;
+        }
+
+        .quick-tips h4 {
+            margin: 0 0 15px 0;
+            color: #856404;
+        }
+
+        .quick-tips ul {
+            margin: 0;
+            padding-left: 20px;
+            color: #856404;
+        }
+
+        .quick-tips li {
+            margin-bottom: 8px;
+        }
+
+        .file-upload {
+            margin-bottom: 20px;
+        }
+
+        .upload-label {
+            display: block;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 8px;
+        }
+
+        .vapi-description {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #007bff;
+            color: #004085;
+        }
+
+        #reviewResponse {
+            margin-top: 20px;
+        }
+
+        .analysis-header {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .transcript-section, .analysis-section {
+            margin-bottom: 25px;
+        }
+
+        .transcript-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            font-style: italic;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-top: 10px;
+        }
+
+        .analysis-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+            margin-top: 10px;
+        }
+
+        .overall-score {
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            color: #856404;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.2rem;
+            margin: 20px 0;
+        }
+
+        .big-score {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #dc3545;
+        }
+
+        .score {
+            background: #007bff;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .feedback-point {
+            margin: 15px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 3px solid #007bff;
+        }
+
+        .strengths-section {
+            background: #d4edda;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+            margin: 15px 0;
+        }
+
+        .improvement-section {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #ffc107;
+            margin: 15px 0;
+        }
+
+        .suggestions-section {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+            margin: 15px 0;
+        }
+
+        .highlight {
+            background: #fff3cd;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #856404;
+        }
+
+        .practice-again {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin-top: 25px;
+        }
+
+        .practice-again strong {
+            color: #ffd700;
+        }
+
         @media (max-width: 768px) {
             .content {
                 padding: 20px;
@@ -251,6 +550,22 @@
             
             .header h1 {
                 font-size: 2rem;
+            }
+
+            .review-tabs {
+                flex-direction: column;
+            }
+
+            .tab-btn {
+                text-align: left;
+                border-bottom: 1px solid #e9ecef;
+                border-radius: 5px;
+                margin-bottom: 5px;
+            }
+
+            .tab-btn.active {
+                background: #f8f9fa;
+                border-color: #667eea;
             }
         }
     </style>
@@ -345,6 +660,82 @@
                 </div>
                 <div class="response-content" id="responseContent">
                     <!-- Response content will be inserted here -->
+                </div>
+            </div>
+
+            <!-- Apology Review Section -->
+            <div class="form-section" id="reviewSection">
+                <h2>🎤 Apology Review & Voice Analysis</h2>
+                <p style="margin-bottom: 20px; color: #6c757d;">Practice and get feedback on your apology with AI-powered analysis</p>
+                
+                <div class="review-tabs">
+                    <button class="tab-btn active" onclick="switchTab('text')">📝 Text Review</button>
+                    <button class="tab-btn" onclick="switchTab('vapi')">🎙️ Voice Analysis with AI Coach</button>
+                </div>
+
+                <!-- Text Review Tab -->
+                <div id="textReviewTab" class="tab-content active">
+                    <div class="form-group">
+                        <label for="apologyText">Your Apology:</label>
+                        <textarea id="apologyText" placeholder="Type or paste your apology here for AI-powered feedback..." rows="6"></textarea>
+                    </div>
+                    <button type="button" class="submit-btn" onclick="reviewApology()">📝 Analyze Text</button>
+                </div>
+
+                <!-- Vapi Voice Analysis Tab -->
+                <div id="vapiTab" class="tab-content">
+                    <div class="voice-practice-container">
+                        <div class="practice-instructions">
+                            <h3>🎯 AI Voice Coach Session</h3>
+                            <p>Practice your apology directly in your browser and get real-time AI feedback!</p>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="coachingFocus">Coaching Focus</label>
+                            <select id="coachingFocus">
+                                <option value="general">General feedback</option>
+                                <option value="sincerity">Focus on sincerity</option>
+                                <option value="responsibility">Taking responsibility</option>
+                                <option value="tone">Tone and delivery</option>
+                                <option value="structure">Apology structure</option>
+                            </select>
+                        </div>
+                        
+                        <div class="audio-recorder" id="vapiAudioContainer">
+                            <button id="vapiVoiceBtn" class="record-btn" onclick="toggleVapiVoiceSession()">
+                                <span id="vapiVoiceBtnText">🎙️ Start Voice Coaching</span>
+                            </button>
+                            <div id="vapiStatus" class="recording-status"></div>
+                            <div id="vapiConnectionStatus" class="recording-timer"></div>
+                        </div>
+                        
+                        <div class="quick-tips">
+                            <h4>💡 Session Tips:</h4>
+                            <ul>
+                                <li>Allow microphone access when prompted</li>
+                                <li>Speak clearly and naturally</li>
+                                <li>Listen to the AI coach's feedback carefully</li>
+                                <li>Practice multiple times to improve</li>
+                                <li>The AI coach will guide you through the entire process</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="loading" id="reviewLoading">
+                    <div class="spinner"></div>
+                    <p>Analyzing your apology...</p>
+                </div>
+
+                <div class="error-message" id="reviewError"></div>
+
+                <div class="response-section" id="reviewResponse">
+                    <div class="response-header">
+                        <h2 id="reviewResponseTitle">📊 Apology Analysis</h2>
+                    </div>
+                    <div class="response-content" id="reviewResponseContent">
+                        <!-- Review content will be inserted here -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -456,6 +847,427 @@
             responseSection.scrollIntoView({ behavior: 'smooth' });
         }
 
+        // Review section functions
+
+        function switchTab(tabName) {
+            // Remove active class from all tabs and content
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // Add active class to clicked tab and corresponding content
+            event.target.classList.add('active');
+            document.getElementById(tabName + (tabName === 'text' ? 'ReviewTab' : 'Tab')).classList.add('active');
+        }
+
+        async function reviewApology() {
+            const apologyText = document.getElementById('apologyText').value.trim();
+            if (!apologyText) {
+                showError('reviewError', 'Please enter an apology to review.');
+                return;
+            }
+
+            showLoading('reviewLoading');
+            hideError('reviewError');
+            hideResponse('reviewResponse');
+
+            try {
+                const response = await fetch('http://localhost:8000/review-apology', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ apology_text: apologyText })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                hideLoading('reviewLoading');
+                
+                if (data.success) {
+                    displayReviewResponse(data.review, '📝 Text Analysis');
+                } else {
+                    showError('reviewError', 'Failed to analyze apology.');
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                hideLoading('reviewLoading');
+                showError('reviewError', `Error: ${error.message}`);
+            }
+        }
+
+        // Vapi Web SDK integration
+        let vapiClient = null;
+        let isVapiSessionActive = false;
+
+        async function toggleVapiVoiceSession() {
+            const apologyContext = document.getElementById('situation').value.trim();
+            const coachingFocus = document.getElementById('coachingFocus').value;
+
+            if (!apologyContext) {
+                showError('reviewError', 'Please fill out the "What happened?" field before starting voice coaching.');
+                return;
+            }
+
+            if (!isVapiSessionActive) {
+                await startVapiVoiceSession(apologyContext, coachingFocus);
+            } else {
+                await endVapiVoiceSession();
+            }
+        }
+
+        async function startVapiVoiceSession(apologyContext, coachingFocus) {
+            try {
+                showLoading('reviewLoading');
+                hideError('reviewError');
+                hideResponse('reviewResponse');
+
+                // Create Vapi assistant for this session
+                const response = await fetch('http://localhost:8000/vapi-web-assistant', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        apology_context: apologyContext,
+                        coaching_focus: coachingFocus
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                hideLoading('reviewLoading');
+
+                if (!data.success) {
+                    throw new Error('Failed to create voice coaching assistant');
+                }
+
+                try {
+                    // Wait for and initialize Vapi Web SDK
+                    await waitForVapiSDK();
+                    vapiClient = new window.Vapi(data.public_key);
+                    
+                    // Set up event handlers
+                    vapiClient.on('call-start', () => {
+                        updateVapiUI('connected', '🎙️ Connected! Start speaking your apology...');
+                    });
+                    
+                    vapiClient.on('call-end', () => {
+                        updateVapiUI('ended', 'Session ended. Click to start a new coaching session.');
+                        isVapiSessionActive = false;
+                    });
+
+                    vapiClient.on('error', (error) => {
+                        console.error('Vapi error:', error);
+                        showError('reviewError', `Voice session error: ${error.message || 'Unknown error'}`);
+                        updateVapiUI('error', 'Session error. Please try again.');
+                        isVapiSessionActive = false;
+                    });
+
+                    vapiClient.on('message', (message) => {
+                        console.log('Vapi message:', message);
+                        if (message.type === 'transcript' && message.transcriptType === 'final') {
+                            updateVapiStatus(`AI Coach: "${message.transcript}"`);
+                        }
+                    });
+
+                    // Start the call with the assistant
+                    await vapiClient.start(data.assistant_id);
+                    isVapiSessionActive = true;
+                    updateVapiUI('connecting', 'Connecting to AI coach...');
+
+                } catch (sdkError) {
+                    console.warn('Vapi SDK failed, falling back to native recording:', sdkError);
+                    
+                    // Fallback: Use native browser recording
+                    updateVapiStatus('Using native recording fallback...');
+                    await startNativeAudioRecording();
+                    isVapiSessionActive = true;
+                }
+
+            } catch (error) {
+                console.error('Error starting Vapi session:', error);
+                hideLoading('reviewLoading');
+                showError('reviewError', `Error: ${error.message}`);
+                updateVapiUI('error', 'Failed to start session. Please try again.');
+            }
+        }
+
+        async function endVapiVoiceSession() {
+            if (isVapiSessionActive) {
+                // Stop Vapi client if it exists
+                if (vapiClient) {
+                    vapiClient.stop();
+                }
+                
+                // Stop native recording if it's active
+                if (mediaRecorder && mediaRecorder.state === 'recording') {
+                    stopNativeAudioRecording();
+                }
+                
+                isVapiSessionActive = false;
+                updateVapiUI('ended', 'Session ended. Click to start a new coaching session.');
+                
+                // Clear timer display
+                document.getElementById('vapiConnectionStatus').textContent = '';
+            }
+        }
+
+        function updateVapiUI(status, message) {
+            const btn = document.getElementById('vapiVoiceBtn');
+            const btnText = document.getElementById('vapiVoiceBtnText');
+            const statusDiv = document.getElementById('vapiStatus');
+            const connectionDiv = document.getElementById('vapiConnectionStatus');
+            const container = document.getElementById('vapiAudioContainer');
+
+            switch(status) {
+                case 'connecting':
+                    btn.classList.add('recording');
+                    btnText.textContent = '⏹️ End Session';
+                    statusDiv.textContent = message;
+                    statusDiv.classList.add('recording');
+                    container.classList.add('recording');
+                    break;
+                case 'connected':
+                    btn.classList.add('recording');
+                    btnText.textContent = '⏹️ End Session';
+                    statusDiv.textContent = message;
+                    statusDiv.classList.add('recording');
+                    container.classList.add('recording');
+                    connectionDiv.textContent = '🟢 Live';
+                    break;
+                case 'recording':
+                    btn.classList.add('recording');
+                    btnText.textContent = '⏹️ Stop Recording';
+                    statusDiv.textContent = message;
+                    statusDiv.classList.add('recording');
+                    container.classList.add('recording');
+                    break;
+                case 'processing':
+                    btn.classList.remove('recording');
+                    btn.classList.add('processing');
+                    btnText.textContent = '🔄 Processing...';
+                    statusDiv.textContent = message;
+                    statusDiv.classList.remove('recording');
+                    container.classList.remove('recording');
+                    break;
+                case 'ended':
+                    btn.classList.remove('recording', 'processing');
+                    btnText.textContent = '🎙️ Start Voice Coaching';
+                    statusDiv.textContent = message;
+                    statusDiv.classList.remove('recording');
+                    container.classList.remove('recording');
+                    connectionDiv.textContent = '';
+                    break;
+                case 'error':
+                    btn.classList.remove('recording', 'processing');
+                    btnText.textContent = '🎙️ Start Voice Coaching';
+                    statusDiv.textContent = message;
+                    statusDiv.classList.remove('recording');
+                    container.classList.remove('recording');
+                    connectionDiv.textContent = '';
+                    break;
+            }
+        }
+
+        function updateVapiStatus(message) {
+            const statusDiv = document.getElementById('vapiStatus');
+            statusDiv.innerHTML = message;
+        }
+
+
+
+        function displayReviewResponse(content, title) {
+            document.getElementById('reviewResponseTitle').textContent = title;
+            document.getElementById('reviewResponseContent').innerHTML = formatReviewContent(content);
+            document.getElementById('reviewResponse').style.display = 'block';
+            document.getElementById('reviewResponse').scrollIntoView({ behavior: 'smooth' });
+        }
+
+
+        function formatReviewContent(content) {
+            return content
+                .replace(/\n\n/g, '</p><p>')
+                .replace(/\n/g, '<br>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/^\s*(\d+)\.\s/gm, '<br><strong>$1.</strong> ')
+                .replace(/^([A-Z][^:]*:)/gm, '<h4>$1</h4>');
+        }
+
+        function showLoading(elementId) {
+            document.getElementById(elementId).style.display = 'block';
+        }
+
+        function hideLoading(elementId) {
+            document.getElementById(elementId).style.display = 'none';
+        }
+
+        function showError(elementId, message) {
+            const errorElement = document.getElementById(elementId);
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+        }
+
+        function hideError(elementId) {
+            document.getElementById(elementId).style.display = 'none';
+        }
+
+        function hideResponse(elementId) {
+            document.getElementById(elementId).style.display = 'none';
+        }
+
+        // SDK loading verification with dynamic loading
+        async function waitForVapiSDK() {
+            try {
+                // Check if SDK is already loaded
+                if (typeof window.Vapi !== 'undefined') {
+                    return window.Vapi;
+                }
+
+                // Try to load SDK dynamically
+                if (typeof window.loadVapiSDK === 'function') {
+                    const loaded = await window.loadVapiSDK();
+                    if (loaded && typeof window.Vapi !== 'undefined') {
+                        return window.Vapi;
+                    }
+                }
+
+                throw new Error('Vapi SDK could not be loaded');
+            } catch (error) {
+                console.error('Vapi SDK loading failed:', error);
+                throw error;
+            }
+        }
+
+        // Native audio recording fallback
+        let mediaRecorder = null;
+        let recordedChunks = [];
+        let currentAudioBlob = null;
+        let recordingTimer = null;
+        let recordingSeconds = 0;
+
+        async function startNativeAudioRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                recordedChunks = [];
+                recordingSeconds = 0;
+
+                mediaRecorder.ondataavailable = function(event) {
+                    if (event.data.size > 0) {
+                        recordedChunks.push(event.data);
+                    }
+                };
+
+                mediaRecorder.onstop = async function() {
+                    currentAudioBlob = new Blob(recordedChunks, { type: 'audio/wav' });
+                    const audioUrl = URL.createObjectURL(currentAudioBlob);
+                    
+                    updateVapiUI('processing', '🔄 Analyzing your apology...');
+                    
+                    // Upload and analyze the recording
+                    await analyzeRecordedApology();
+                };
+
+                mediaRecorder.start();
+                updateVapiUI('recording', '🎙️ Recording... Speak your apology clearly');
+                startRecordingTimer();
+                
+                return true;
+            } catch (error) {
+                console.error('Error accessing microphone:', error);
+                throw new Error('Could not access microphone. Please check permissions.');
+            }
+        }
+
+        function stopNativeAudioRecording() {
+            if (recordingTimer) {
+                clearInterval(recordingTimer);
+                recordingTimer = null;
+            }
+            
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+            }
+        }
+
+        function startRecordingTimer() {
+            recordingSeconds = 0;
+            const timerDisplay = document.getElementById('vapiConnectionStatus');
+            
+            recordingTimer = setInterval(() => {
+                recordingSeconds++;
+                const minutes = Math.floor(recordingSeconds / 60);
+                const seconds = recordingSeconds % 60;
+                timerDisplay.textContent = `🔴 ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        async function analyzeRecordedApology() {
+            if (!currentAudioBlob) {
+                showError('reviewError', 'No recording found to analyze.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', currentAudioBlob, 'apology.wav');
+
+            try {
+                const response = await fetch('http://localhost:8000/analyze-audio', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayReviewResponse(
+                        `<div class="analysis-header">
+                            <h3>🎙️ Your Recorded Apology Analysis</h3>
+                        </div>
+                        
+                        <div class="transcript-section">
+                            <h4>📝 What You Said:</h4>
+                            <div class="transcript-box">
+                                "${data.transcript}"
+                            </div>
+                        </div>
+                        
+                        <div class="analysis-section">
+                            <h4>📊 AI Coaching Feedback:</h4>
+                            <div class="analysis-content">
+                                ${data.analysis.replace(/\n/g, '<br>')}
+                            </div>
+                        </div>
+                        
+                        <div class="practice-again">
+                            <p><strong>💡 Want to improve?</strong> Record another apology incorporating this feedback!</p>
+                        </div>`, 
+                        '🎯 Voice Analysis Results'
+                    );
+                    updateVapiUI('ended', 'Analysis complete! Record another to practice more.');
+                } else {
+                    throw new Error('Failed to analyze recording');
+                }
+
+            } catch (error) {
+                console.error('Error analyzing recording:', error);
+                showError('reviewError', `Error analyzing your apology: ${error.message}`);
+                updateVapiUI('error', 'Analysis failed. Please try again.');
+            }
+        }
+
         // Pre-fill with example data for demo
         window.addEventListener('load', function() {
             document.getElementById('situation').value = 'I forgot our anniversary dinner and made other plans';
@@ -467,6 +1279,12 @@
             document.getElementById('loves_surprises').checked = true;
             document.getElementById('budget').value = '200.00';
             document.getElementById('location').value = 'New York, NY';
+            
+            // Pre-fill review section with example
+            document.getElementById('apologyText').value = 'I am truly sorry for forgetting our anniversary dinner. I know how much this special day means to you, and there is no excuse for my thoughtlessness. I take full responsibility for letting you down and hurting your feelings. I promise to set reminders and prioritize our important moments together. Can you please forgive me?';
+            
+            // Initialize voice features
+            console.log('Voice analysis system ready with Vapi + fallback recording');
         });
     </script>
 </body>
