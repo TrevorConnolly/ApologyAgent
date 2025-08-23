@@ -224,4 +224,8 @@ config.json
 *.sqlite
 *.sqlite3
 
+# Convex generated files (should not be committed)
+convex/_generated/
 
+# Node modules
+/node_modules
