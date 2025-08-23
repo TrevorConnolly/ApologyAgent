@@ -1,473 +1,676 @@
+<!-- /index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🕊️ Apology Agent Dashboard</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1"
+  />
+  <title>🕊️ Apology Agent — Glow</title>
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400..700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-        }
+  <style>
+    :root{
+      --bg-1:#0a0b10;
+      --bg-2:#101225;
+      --accent:#7c5cff;    /* Electric violet */
+      --accent-2:#00e7ff;  /* Cyber cyan */
+      --accent-3:#ff7ad9;  /* Candy pink */
+      --ok:#22c55e;
+      --warn:#f59e0b;
+      --err:#ef4444;
+      --text:#e7e7ef;
+      --muted:#9aa0b6;
+      --card:rgba(255,255,255,0.08);
+      --glass:rgba(255,255,255,0.12);
+      --ring:rgba(124,92,255,.35);
+      --shadow:0 20px 40px rgba(0,0,0,.35);
+      --radius:18px;
+    }
 
-        .header {
-            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body{
+      margin:0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji", "Segoe UI Symbol";
+      color:var(--text);
+      background: radial-gradient(1200px 800px at 20% -10%, rgba(124,92,255,.35), transparent 55%),
+                  radial-gradient(900px 700px at 110% 10%, rgba(0,231,255,.25), transparent 50%),
+                  linear-gradient(180deg, var(--bg-1), var(--bg-2));
+      overflow-x:hidden;
+    }
 
-        .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            font-weight: 300;
-        }
+    /* Floating gradient blobs (muted on reduced-motion) */
+    .blob{
+      position: fixed; inset:auto;
+      width:480px; height:480px;
+      filter: blur(80px); opacity:.25; z-index:-1;
+      border-radius:50%;
+    }
+    .blob.b1{ top:-120px; left:-120px; background:radial-gradient(circle at 30% 30%, #8a6bff, transparent 60%);}
+    .blob.b2{ bottom:-140px; right:-120px; background:radial-gradient(circle at 70% 70%, #18e0ff, transparent 60%);}
+    @keyframes floaty {
+      0% { transform: translate3d(0,0,0) scale(1);}
+      50%{ transform: translate3d(20px,-10px,0) scale(1.05);}
+      100%{transform: translate3d(0,0,0) scale(1);}
+    }
+    .blob{ animation: floaty 14s ease-in-out infinite; }
+    .blob.b2{ animation-duration: 18s; }
 
-        .header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
-        }
+    /* Respect reduced motion */
+    @media (prefers-reduced-motion: reduce){
+      .blob{ animation: none; }
+      .pulse, .pop, .spin { animation:none !important; }
+      *{ scroll-behavior: auto; }
+    }
 
-        .content {
-            padding: 40px;
-        }
+    /* Top nav */
+    .nav{
+      position: sticky; top:0; z-index:50;
+      backdrop-filter: blur(12px);
+      background: linear-gradient( to bottom, rgba(10,11,16,.85), rgba(10,11,16,.35) );
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .nav-inner{
+      max-width:1100px; margin:0 auto; padding:14px 18px;
+      display:flex; align-items:center; gap:14px; justify-content:space-between;
+    }
+    .brand{
+      display:flex; align-items:center; gap:12px; font-family: "Space Grotesk", Inter, sans-serif;
+      letter-spacing:.3px;
+    }
+    .brand .logo{
+      width:34px; height:34px; display:grid; place-items:center;
+      border-radius:10px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      box-shadow: 0 8px 24px rgba(124,92,255,.35), inset 0 0 20px rgba(255,255,255,.15);
+    }
+    .brand span{ font-weight:700; font-size:18px; }
+    .chip{
+      padding:6px 10px; border-radius:999px; font-size:12px; font-weight:600;
+      background: linear-gradient(135deg, rgba(124,92,255,.18), rgba(0,231,255,.18));
+      border:1px solid rgba(124,92,255,.35);
+      color:#dfe3ff;
+    }
 
-        .form-section {
-            background: #f8f9fa;
-            padding: 30px;
-            border-radius: 15px;
-            margin-bottom: 30px;
-            border: 1px solid #e9ecef;
-        }
+    /* Container */
+    .shell{ max-width:1100px; margin:28px auto 120px; padding:0 18px; }
+    .grid{
+      display:grid; grid-template-columns: 1.1fr .9fr; gap:22px;
+    }
+    @media (max-width: 960px){ .grid{ grid-template-columns: 1fr; } }
 
-        .form-section h2 {
-            color: #495057;
-            margin-bottom: 20px;
-            font-size: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+    /* Glass cards */
+    .card{
+      background:linear-gradient(180deg, var(--glass), rgba(255,255,255,0.06));
+      border:1px solid rgba(255,255,255,.10);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: clip;
+    }
 
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 20px;
-        }
+    /* Hero header inside left card */
+    .hero{
+      padding:22px 22px 0;
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+    }
+    .hero h1{
+      font-family:"Space Grotesk", Inter, sans-serif;
+      font-size: clamp(22px, 2.2vw, 28px);
+      margin:0; font-weight:700;
+      letter-spacing:.2px;
+    }
+    .hero p{ margin:6px 0 0; color:var(--muted); font-size:14px; }
 
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
+    /* Step pills */
+    .steps{
+      display:flex; gap:10px; padding:14px 22px 8px; flex-wrap:wrap;
+    }
+    .step{
+      display:flex; align-items:center; gap:8px; padding:8px 12px;
+      border-radius:999px; border:1px dashed rgba(255,255,255,.14);
+      background: rgba(255,255,255,.04); color:#dfe3ff; font-size:13px; font-weight:600;
+    }
+    .step.active{
+      border-style: solid;
+      background: linear-gradient(135deg, rgba(124,92,255,.22), rgba(0,231,255,.14));
+      box-shadow: inset 0 0 0 1px rgba(124,92,255,.35);
+    }
 
-        .form-group label {
-            font-weight: 600;
-            color: #495057;
-            margin-bottom: 8px;
-            font-size: 0.9rem;
-        }
+    /* Form area */
+    .content{ padding:16px 22px 22px; }
+    .form-grid{
+      display:grid; grid-template-columns: repeat(12, 1fr); gap:14px;
+    }
+    .col-12{ grid-column: span 12; }
+    .col-6{ grid-column: span 6; }
+    .col-4{ grid-column: span 4; }
+    .col-3{ grid-column: span 3; }
+    @media (max-width: 880px){
+      .col-6, .col-4, .col-3 { grid-column: span 12; }
+    }
 
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            padding: 12px;
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.3s ease;
-        }
+    .label{
+      font-size:12px; color:var(--muted); font-weight:700; letter-spacing:.3px; text-transform: uppercase;
+      margin:4px 0 8px;
+    }
+    .input, .select, .textarea, .chipset{
+      width:100%; border-radius:14px; background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.14); color:var(--text);
+      padding:12px 14px; font-size:15px;
+      outline: none;
+      transition: box-shadow .2s ease, border-color .2s ease, transform .06s ease;
+    }
+    .textarea{ min-height:120px; resize: vertical; line-height:1.45; }
+    .input:focus, .select:focus, .textarea:focus{
+      border-color: var(--ring); box-shadow: 0 0 0 6px rgba(124,92,255,.14);
+    }
 
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
+    .row{
+      display:flex; gap:10px; align-items:stretch;
+    }
 
-        .form-group textarea {
-            resize: vertical;
-            min-height: 100px;
-        }
+    /* Preset chips */
+    .chipset{
+      display:flex; gap:8px; flex-wrap:wrap; padding:10px;
+    }
+    .chip-btn{
+      border:1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.08);
+      color:var(--text); padding:8px 12px; border-radius:999px; font-size:13px; font-weight:600;
+      cursor:pointer; transition: transform .06s ease, box-shadow .2s ease;
+    }
+    .chip-btn:hover{ transform: translateY(-1px); box-shadow: 0 6px 16px rgba(0,0,0,.25);}
+    .chip-btn.active{
+      background: linear-gradient(135deg, rgba(124,92,255,.28), rgba(0,231,255,.18));
+      border-color: rgba(124,92,255,.55);
+    }
 
-        .preferences-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-        }
+    /* Slider with bubble */
+    .slider-wrap{ position:relative; padding:14px 12px; border-radius:14px; background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14); }
+    .slider-wrap input[type="range"]{ width:100%; }
+    .bubble{
+      position:absolute; top:-14px; transform: translateX(-50%);
+      padding:4px 8px; border-radius:8px; font-size:12px; font-weight:700;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2)); color:white;
+      box-shadow: 0 8px 16px rgba(124,92,255,.35);
+      pointer-events:none;
+    }
 
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+    /* CTA row */
+    .cta{
+      display:flex; gap:12px; align-items:center; justify-content:space-between; margin-top:8px;
+      padding:16px; border-top:1px solid rgba(255,255,255,.08);
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border-bottom-left-radius: var(--radius);
+      border-bottom-right-radius: var(--radius);
+    }
+    .mini-hint{ color:var(--muted); font-size:13px; }
+    .btn{
+      appearance:none; border:none; border-radius:999px; font-weight:800; font-size:15px;
+      padding:14px 18px; letter-spacing:.3px; color:#07070a;
+      background: linear-gradient(135deg, #ffffff, #dfe4ff);
+      box-shadow: 0 10px 24px rgba(124,92,255,.25), inset 0 -2px 0 rgba(0,0,0,.06);
+      cursor:pointer; transition: transform .08s ease, box-shadow .2s ease, filter .2s ease;
+    }
+    .btn:hover{ transform: translateY(-1px); box-shadow: 0 14px 28px rgba(124,92,255,.32); }
+    .btn:active{ transform: translateY(0); }
+    .btn:disabled{ filter: saturate(.2) opacity(.8); cursor:not-allowed; }
 
-        .checkbox-group input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-        }
+    /* Right column: live preview + results */
+    .preview{
+      padding:18px 18px 8px;
+      display:grid; gap:14px;
+    }
+    .ticker{
+      display:flex; gap:8px; align-items:center; padding:10px 12px;
+      border-radius:12px; background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);
+      font-size:13px;
+    }
+    .dot{ width:8px; height:8px; border-radius:999px; background: var(--ok); box-shadow: 0 0 8px var(--ok);}
+    .ticker strong{ font-weight:800; letter-spacing:.3px; }
 
-        .submit-btn {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            padding: 15px 40px;
-            border-radius: 25px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            display: block;
-            margin: 0 auto;
-        }
+    .skeleton{
+      border-radius:12px; height:112px; background: linear-gradient(90deg, rgba(255,255,255,.06), rgba(255,255,255,.12), rgba(255,255,255,.06));
+      background-size: 200% 100%;
+      animation: shimmer 1.2s linear infinite;
+    }
+    @keyframes shimmer { 0%{ background-position:200% 0;} 100%{ background-position:-200% 0;} }
 
-        .submit-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
-        }
+    .response-section{
+      display:none; padding:18px;
+    }
+    .response-header{
+      display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px;
+    }
+    .badge{
+      padding:6px 10px; border-radius:999px; font-size:12px; font-weight:800; letter-spacing:.3px;
+      background: linear-gradient(135deg, rgba(34,197,94,.25), rgba(16,185,129,.25));
+      border:1px solid rgba(34,197,94,.5); color:#d1ffe1;
+    }
+    .response-content{ line-height:1.6; color:#e6e8f3; }
+    .response-content h3{
+      margin:16px 0 8px; font-family:"Space Grotesk"; font-size:18px;
+      color:#dedeff; border-bottom:1px dashed rgba(255,255,255,.14); padding-bottom:6px;
+    }
+    .cost-summary, .success-prob{
+      background: rgba(34,197,94,.12);
+      border:1px solid rgba(34,197,94,.35);
+      color:#d1ffe1; padding:12px 14px; border-radius:12px; margin:14px 0;
+    }
+    .success-prob{
+      background: linear-gradient(135deg, rgba(255,215,0,.18), rgba(255,237,78,.12));
+      color:#fff5b1; border-color: rgba(255,237,78,.4);
+    }
 
-        .submit-btn:active {
-            transform: translateY(0);
-        }
+    /* Error toast */
+    .toast{
+      position: fixed; left:50%; bottom:22px; transform: translateX(-50%) translateY(120%);
+      transition: transform .25s ease; z-index:60;
+      background: linear-gradient(135deg, rgba(239,68,68,.92), rgba(244,114,182,.92));
+      border:1px solid rgba(255,255,255,.25); color:white; box-shadow: var(--shadow);
+      padding:12px 14px; border-radius:12px; font-weight:700;
+    }
+    .toast.show{ transform: translateX(-50%) translateY(0); }
 
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 20px;
-        }
+    /* Tiny helpers */
+    .subtle{ color:var(--muted); font-size:12px; }
+    .count{ font-variant-numeric: tabular-nums; color:var(--muted); }
 
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
-        }
+    /* Hidden canvas for confetti */
+    #fx { position: fixed; inset:0; pointer-events:none; z-index:55; }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .response-section {
-            display: none;
-            background: #fff;
-            border: 1px solid #e9ecef;
-            border-radius: 15px;
-            padding: 30px;
-            margin-top: 30px;
-        }
-
-        .response-header {
-            background: linear-gradient(135deg, #28a745, #20c997);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .response-content {
-            line-height: 1.6;
-            color: #495057;
-        }
-
-        .response-content h3 {
-            color: #28a745;
-            margin: 20px 0 10px 0;
-            border-bottom: 2px solid #e9ecef;
-            padding-bottom: 5px;
-        }
-
-        .response-content ul {
-            margin-left: 20px;
-            margin-bottom: 15px;
-        }
-
-        .response-content li {
-            margin-bottom: 8px;
-        }
-
-        .cost-summary {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            margin: 20px 0;
-            border-left: 4px solid #28a745;
-        }
-
-        .success-probability {
-            background: linear-gradient(135deg, #ffd700, #ffed4e);
-            color: #856404;
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-            font-weight: 600;
-            margin: 20px 0;
-        }
-
-        .error-message {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 20px 0;
-            border: 1px solid #f5c6cb;
-            display: none;
-        }
-
-        @media (max-width: 768px) {
-            .content {
-                padding: 20px;
-            }
-            
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .preferences-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .header h1 {
-                font-size: 2rem;
-            }
-        }
-    </style>
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🕊️ Apology Agent</h1>
-            <p>Create meaningful apologies with AI-powered strategies</p>
+  <canvas id="fx"></canvas>
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+
+  <!-- NAV -->
+  <div class="nav">
+    <div class="nav-inner">
+      <div class="brand">
+        <div class="logo">🕊️</div>
+        <span>Apology Agent</span>
+        <span class="chip">Gen-Z Mode</span>
+      </div>
+      <div class="subtle">Make it right — fast.</div>
+    </div>
+  </div>
+
+  <div class="shell">
+    <div class="grid">
+
+      <!-- LEFT: FORM -->
+      <div class="card">
+        <div class="hero">
+          <div>
+            <h1>Create a meaningful apology, without cringe</h1>
+            <p>Answer a few quick things. We’ll craft the message + plan.</p>
+          </div>
+          <span class="chip">✨ New</span>
+        </div>
+
+        <div class="steps">
+          <div class="step active">1. Details</div>
+          <div class="step">2. Preferences</div>
+          <div class="step">3. Generate</div>
         </div>
 
         <div class="content">
-            <div class="form-section">
-                <h2>📝 Apology Details</h2>
-                <form id="apologyForm">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="situation">What happened? *</label>
-                            <textarea id="situation" name="situation" required placeholder="Describe the situation that requires an apology..."></textarea>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="recipient_name">Recipient's Name *</label>
-                            <input type="text" id="recipient_name" name="recipient_name" required placeholder="e.g., Sarah">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="relationship_type">Relationship Type *</label>
-                            <select id="relationship_type" name="relationship_type" required>
-                                <option value="">Select relationship type</option>
-                                <option value="romantic">Romantic Partner</option>
-                                <option value="family">Family Member</option>
-                                <option value="friend">Friend</option>
-                                <option value="colleague">Colleague</option>
-                                <option value="acquaintance">Acquaintance</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="severity">Severity Level (1-10) *</label>
-                            <input type="number" id="severity" name="severity" min="1" max="10" required placeholder="8">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="budget">Budget ($) *</label>
-                            <input type="number" id="budget" name="budget" min="0" step="0.01" required placeholder="200.00">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="location">Location *</label>
-                            <input type="text" id="location" name="location" required placeholder="e.g., New York, NY">
-                        </div>
-                    </div>
-
-                    <div class="form-section">
-                        <h2>🎁 Recipient Preferences</h2>
-                        <div class="preferences-grid">
-                            <div class="form-group">
-                                <label for="favorite_flowers">Favorite Flowers</label>
-                                <input type="text" id="favorite_flowers" name="favorite_flowers" placeholder="e.g., roses, tulips">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="favorite_cuisine">Favorite Cuisine</label>
-                                <input type="text" id="favorite_cuisine" name="favorite_cuisine" placeholder="e.g., italian, japanese">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="loves_surprises">Loves Surprises</label>
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="loves_surprises" name="loves_surprises">
-                                    <label for="loves_surprises">Yes, they enjoy surprises</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="submit-btn">🕊️ Generate Apology Strategy</button>
-                </form>
-            </div>
-
-            <div class="loading" id="loading">
-                <div class="spinner"></div>
-                <p>Generating your personalized apology strategy...</p>
-            </div>
-
-            <div class="error-message" id="errorMessage"></div>
-
-            <div class="response-section" id="responseSection">
-                <div class="response-header">
-                    <h2>🕊️ Your Apology Strategy</h2>
+          <form id="apologyForm">
+            <div class="form-grid">
+              <div class="col-12">
+                <div class="label">What happened? *</div>
+                <textarea id="situation" class="textarea" name="situation" required placeholder="e.g., I forgot our anniversary dinner and made other plans..."></textarea>
+                <div class="row" style="justify-content:space-between; margin-top:6px;">
+                  <span class="subtle">Be specific and own your part.</span>
+                  <span class="count" id="situationCount">0/300</span>
                 </div>
-                <div class="response-content" id="responseContent">
-                    <!-- Response content will be inserted here -->
+              </div>
+
+              <div class="col-6">
+                <div class="label">Recipient's Name *</div>
+                <input id="recipient_name" class="input" name="recipient_name" required placeholder="e.g., Sarah"/>
+              </div>
+
+              <div class="col-6">
+                <div class="label">Relationship Type *</div>
+                <div class="chipset" id="relationshipChips" role="group" aria-label="Relationship presets">
+                  <button type="button" data-value="romantic" class="chip-btn">Romantic</button>
+                  <button type="button" data-value="friend" class="chip-btn">Friend</button>
+                  <button type="button" data-value="family" class="chip-btn">Family</button>
+                  <button type="button" data-value="colleague" class="chip-btn">Colleague</button>
+                  <button type="button" data-value="acquaintance" class="chip-btn">Acquaintance</button>
                 </div>
+                <select id="relationship_type" class="select" name="relationship_type" required aria-label="Relationship Type" style="display:none">
+                  <option value="">Select relationship type</option>
+                  <option value="romantic">Romantic Partner</option>
+                  <option value="family">Family Member</option>
+                  <option value="friend">Friend</option>
+                  <option value="colleague">Colleague</option>
+                  <option value="acquaintance">Acquaintance</option>
+                </select>
+              </div>
+
+              <div class="col-6">
+                <div class="label">Severity (1–10) *</div>
+                <div class="slider-wrap">
+                  <input type="range" id="severity" name="severity" min="1" max="10" value="8" />
+                  <div class="bubble" id="sevBubble" style="left:0">8</div>
+                </div>
+              </div>
+
+              <div class="col-6">
+                <div class="label">Budget ($) *</div>
+                <input id="budget" class="input" name="budget" type="number" min="0" step="0.01" required placeholder="200.00"/>
+              </div>
+
+              <div class="col-6">
+                <div class="label">Location *</div>
+                <input id="location" class="input" name="location" required placeholder="e.g., New York, NY"/>
+              </div>
+
+              <div class="col-6">
+                <div class="label">Contact (optional)</div>
+                <div class="row" style="gap:8px;">
+                  <input id="recipient_email" class="input" type="email" placeholder="email for reservations" style="flex:1;">
+                  <input id="recipient_phone" class="input" type="tel" placeholder="phone for reservations" style="flex:1;">
+                </div>
+              </div>
+
+              <div class="col-12">
+                <div class="label">Recipient Preferences</div>
+                <div class="row" style="gap:8px;">
+                  <input id="favorite_flowers" class="input" placeholder="Favorite flowers (e.g., roses, tulips)" style="flex:1;">
+                  <input id="favorite_cuisine" class="input" placeholder="Favorite cuisine (e.g., Italian, Japanese)" style="flex:1;">
+                </div>
+                <div style="margin-top:10px; display:flex; gap:10px; align-items:center;">
+                  <input type="checkbox" id="loves_surprises">
+                  <label for="loves_surprises" class="subtle" style="cursor:pointer;">They enjoy surprises</label>
+                </div>
+              </div>
+
             </div>
+
+            <div class="cta">
+              <span class="mini-hint">Takes ~3s. We’ll generate message + actions + cost.</span>
+              <button class="btn" id="submitBtn" type="submit">🕊️ Generate Strategy</button>
+            </div>
+          </form>
         </div>
+      </div>
+
+      <!-- RIGHT: PREVIEW + RESPONSE -->
+      <div class="card">
+        <div class="preview">
+          <div class="ticker">
+            <span class="dot" id="statusDot"></span>
+            <div><strong>Status:</strong> <span id="statusText">Ready</span></div>
+          </div>
+          <div class="skeleton" id="skeleton" aria-hidden="true" style="display:none;"></div>
+
+          <div class="response-section" id="responseSection">
+            <div class="response-header">
+              <h2 style="margin:0; font-family:'Space Grotesk';">🕊️ Your Apology Strategy</h2>
+              <span class="badge" id="confidenceBadge" title="Model confidence score">Confidence • —</span>
+            </div>
+            <div class="response-content" id="responseContent"></div>
+          </div>
+        </div>
+      </div>
+
     </div>
+  </div>
 
-    <script>
-        document.getElementById('apologyForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            // Show loading
-            document.getElementById('loading').style.display = 'block';
-            document.getElementById('responseSection').style.display = 'none';
-            document.getElementById('errorMessage').style.display = 'none';
-            
-            // Collect form data
-            const formData = {
-                situation: document.getElementById('situation').value,
-                recipient_name: document.getElementById('recipient_name').value,
-                relationship_type: document.getElementById('relationship_type').value,
-                severity: parseInt(document.getElementById('severity').value),
-                recipient_preferences: {
-                    favorite_flowers: document.getElementById('favorite_flowers').value || null,
-                    favorite_cuisine: document.getElementById('favorite_cuisine').value || null,
-                    loves_surprises: document.getElementById('loves_surprises').checked
-                },
-                budget: parseFloat(document.getElementById('budget').value),
-                location: document.getElementById('location').value
-            };
+  <!-- Error Toast -->
+  <div class="toast" id="errorToast">Error: Couldn’t reach API. Is the server running?</div>
 
-            try {
-                const response = await fetch('http://localhost:8000/create-apology', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(formData)
-                });
+  <script>
+    // Helpers
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => document.querySelectorAll(sel);
+    const fx = document.getElementById('fx');
+    const ctx = fx.getContext('2d');
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+    function resizeCanvas(){
+      fx.width = window.innerWidth; fx.height = window.innerHeight;
+    }
+    resizeCanvas(); window.addEventListener('resize', resizeCanvas);
 
-                const data = await response.json();
-                
-                // Hide loading
-                document.getElementById('loading').style.display = 'none';
-                
-                // Display response
-                displayResponse(data.formatted_response);
-                
-            } catch (error) {
-                console.error('Error:', error);
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('errorMessage').style.display = 'block';
-                document.getElementById('errorMessage').textContent = `Error: ${error.message}. Please make sure the API server is running on localhost:8000.`;
-            }
+    // Simple confetti (disabled if reduced motion)
+    function confetti(){
+      if(prefersReduced) return;
+      const particles = Array.from({length: 90}, () => ({
+        x: fx.width/2, y: fx.height/3,
+        vx: (Math.random()-0.5)*8, vy: (Math.random()*-6)-2,
+        g: .25 + Math.random()*.15,
+        r: 2 + Math.random()*3,
+        a: 1,
+        hue: 200 + Math.random()*160
+      }));
+      let t=0;
+      (function loop(){
+        t++;
+        ctx.clearRect(0,0,fx.width,fx.height);
+        particles.forEach(p=>{
+          p.vy += p.g; p.x += p.vx; p.y += p.vy; p.a -= .007;
+          ctx.globalAlpha = Math.max(p.a,0);
+          ctx.fillStyle = `hsl(${p.hue} 100% 60%)`;
+          ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
         });
+        if(t<220) requestAnimationFrame(loop); else ctx.clearRect(0,0,fx.width,fx.height);
+      })();
+    }
 
-        function displayResponse(responseText) {
-            const responseSection = document.getElementById('responseSection');
-            const responseContent = document.getElementById('responseContent');
-            
-            // Clean up the response text and format it nicely
-            let formattedResponse = responseText
-                .replace(/╔═+╗/g, '')
-                .replace(/║/g, '')
-                .replace(/╚═+╝/g, '')
-                .replace(/═+/g, '')
-                .replace(/--------------------------------------------------------------------------------/g, '<hr>')
-                .replace(/\n\n/g, '</p><p>')
-                .replace(/\n/g, '<br>');
-            
-            // Add HTML structure
-            formattedResponse = `<p>${formattedResponse}</p>`;
-            
-            // Replace specific sections with better formatting
-            formattedResponse = formattedResponse
-                .replace(/📝 PERSONALIZED APOLOGY MESSAGE:/g, '<h3>📝 Personalized Apology Message</h3>')
-                .replace(/📋 STRATEGY EXPLANATION:/g, '<h3>📋 Strategy Explanation</h3>')
-                .replace(/🎯 RECOMMENDED ACTIONS:/g, '<h3>🎯 Recommended Actions</h3>')
-                .replace(/💰 ESTIMATED TOTAL COST:/g, '<h3>💰 Estimated Total Cost</h3>')
-                .replace(/📊 SUCCESS PROBABILITY:/g, '<h3>📊 Success Probability</h3>')
-                .replace(/🔮 FOLLOW-UP SUGGESTIONS:/g, '<h3>🔮 Follow-up Suggestions</h3>');
-            
-            // Extract and format cost information
-            const costMatch = formattedResponse.match(/💰 ESTIMATED TOTAL COST: \$([\d.]+)/);
-            if (costMatch) {
-                const cost = costMatch[1];
-                formattedResponse = formattedResponse.replace(
-                    /💰 ESTIMATED TOTAL COST: \$[\d.]+/,
-                    `<div class="cost-summary"><strong>💰 Estimated Total Cost: $${cost}</strong></div>`
-                );
-            }
-            
-            // Extract and format success probability
-            const probMatch = formattedResponse.match(/📊 SUCCESS PROBABILITY: ([\d.]+)%/);
-            if (probMatch) {
-                const probability = probMatch[1];
-                formattedResponse = formattedResponse.replace(
-                    /📊 SUCCESS PROBABILITY: [\d.]+%/,
-                    `<div class="success-probability"><strong>📊 Success Probability: ${probability}%</strong></div>`
-                );
-            }
-            
-            responseContent.innerHTML = formattedResponse;
-            responseSection.style.display = 'block';
-            
-            // Scroll to response
-            responseSection.scrollIntoView({ behavior: 'smooth' });
+    // Character count
+    const situation = $('#situation');
+    const count = $('#situationCount');
+    situation.addEventListener('input', () => {
+      const max = 300;
+      const val = situation.value.slice(0,max);
+      if(val.length !== situation.value.length) situation.value = val;
+      count.textContent = `${val.length}/${max}`;
+    });
+
+    // Relationship chips -> select value mirror (keeps backend schema unchanged)
+    const relChips = $('#relationshipChips');
+    const relSelect = $('#relationship_type');
+    relChips.addEventListener('click', (e)=>{
+      const btn = e.target.closest('.chip-btn');
+      if(!btn) return;
+      $$('.chip-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      relSelect.value = btn.dataset.value;
+    });
+
+    // Severity bubble position
+    const sev = $('#severity');
+    const bubble = $('#sevBubble');
+    function renderBubble(){
+      bubble.textContent = sev.value;
+      const pct = (sev.value - sev.min) / (sev.max - sev.min);
+      const offset = 12; // padding fudge
+      bubble.style.left = `calc(${pct*100}% + ${offset - pct*24}px)`;
+    }
+    sev.addEventListener('input', renderBubble); renderBubble();
+
+    // Submit -> fetch
+    const form = $('#apologyForm');
+    const submitBtn = $('#submitBtn');
+    const statusText = $('#statusText');
+    const statusDot = $('#statusDot');
+    const skeleton = $('#skeleton');
+    const respSec = $('#responseSection');
+    const respContent = $('#responseContent');
+    const confidenceBadge = $('#confidenceBadge');
+    const toast = $('#errorToast');
+
+    function setStatus(txt, ok=true){
+      statusText.textContent = txt;
+      statusDot.style.background = ok ? 'var(--ok)' : 'var(--err)';
+      statusDot.style.boxShadow = ok ? '0 0 8px var(--ok)' : '0 0 8px var(--err)';
+    }
+
+    function showToast(msg){
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(()=> toast.classList.remove('show'), 2200);
+    }
+
+    form.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+
+      submitBtn.disabled = true;
+      setStatus('Generating…');
+      skeleton.style.display = 'block';
+      respSec.style.display = 'none';
+
+      const payload = {
+        situation: $('#situation').value,
+        recipient_name: $('#recipient_name').value,
+        relationship_type: $('#relationship_type').value || (relChips.querySelector('.chip-btn.active')?.dataset.value ?? ''),
+        severity: parseInt($('#severity').value, 10),
+        recipient_preferences: {
+          favorite_flowers: $('#favorite_flowers').value || null,
+          favorite_cuisine: $('#favorite_cuisine').value || null,
+          loves_surprises: $('#loves_surprises').checked
+        },
+        budget: parseFloat($('#budget').value),
+        location: $('#location').value,
+        recipient_email: $('#recipient_email').value || null,
+        recipient_phone: $('#recipient_phone').value || null
+      };
+
+      try{
+        const res = await fetch('/create-apology', {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if(!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        skeleton.style.display = 'none';
+        submitBtn.disabled = false;
+        setStatus('Done');
+        confetti();
+
+        // Confidence badge (if provided)
+        if(typeof data.success_probability === 'number'){
+          const pct = Math.round(data.success_probability * 100);
+          confidenceBadge.textContent = `Confidence • ${pct}%`;
+        } else {
+          confidenceBadge.textContent = 'Confidence • —';
         }
 
-        // Pre-fill with example data for demo
-        window.addEventListener('load', function() {
-            document.getElementById('situation').value = 'I forgot our anniversary dinner and made other plans';
-            document.getElementById('recipient_name').value = 'Sarah';
-            document.getElementById('relationship_type').value = 'romantic';
-            document.getElementById('severity').value = '8';
-            document.getElementById('favorite_flowers').value = 'roses';
-            document.getElementById('favorite_cuisine').value = 'italian';
-            document.getElementById('loves_surprises').checked = true;
-            document.getElementById('budget').value = '200.00';
-            document.getElementById('location').value = 'New York, NY';
-        });
-    </script>
+        if(data.plan){ displayPlan(data.plan); }
+        else if(data.formatted_response){ displayResponse(data.formatted_response); }
+        else {
+          respContent.innerHTML = '<p class="subtle">No content returned.</p>';
+          respSec.style.display = 'block';
+        }
+      }catch(err){
+        skeleton.style.display = 'none';
+        submitBtn.disabled = false;
+        setStatus('Error', false);
+        showToast(`Error: ${err.message}. Make sure the API server is running on localhost:8000.`);
+      }
+    });
+
+    function escapeHTML(s){
+      return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function displayPlan(plan){
+      let html = '';
+      html += `<h3>📝 Personalized Apology Message</h3><p>${escapeHTML(plan.apology_message).replace(/\n/g,'<br>')}</p>`;
+      html += `<h3>📋 Strategy Explanation</h3><p>${escapeHTML(plan.strategy_explanation ?? '')}</p>`;
+
+      html += `<h3>🎯 Recommended Actions</h3>`;
+      if(Array.isArray(plan.recommended_actions) && plan.recommended_actions.length){
+        html += '<ul>';
+        for(const a of plan.recommended_actions){
+          const cost = (a.estimated_cost!=null) ? `$${Number(a.estimated_cost).toFixed(2)}` : 'Free';
+          const details = escapeHTML(JSON.stringify(a.execution_details ?? {}, null, 2)).replace(/\n/g,'<br>');
+          html += `<li style="margin:10px 0;">
+            <strong>${escapeHTML(a.description)}</strong><br>
+            <span class="subtle">Type:</span> ${escapeHTML(a.type)} • <span class="subtle">Priority:</span> ${escapeHTML(a.priority)} • <span class="subtle">Estimated:</span> ${cost}<br>
+            <code style="white-space:pre-wrap; display:block; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); border-radius:10px; padding:8px; margin-top:6px;">${details}</code>
+          </li>`;
+        }
+        html += '</ul>';
+      } else {
+        html += '<p class="subtle">No actions suggested.</p>';
+      }
+
+      if(plan.estimated_total_cost!=null){
+        html += `<div class="cost-summary"><strong>💰 Estimated Total: $${Number(plan.estimated_total_cost).toFixed(2)}</strong></div>`;
+      }
+      if(plan.success_probability!=null){
+        const pct = (Number(plan.success_probability)*100).toFixed(1);
+        html += `<div class="success-prob"><strong>📊 Success Probability: ${pct}%</strong></div>`;
+      }
+      if(Array.isArray(plan.follow_up_suggestions) && plan.follow_up_suggestions.length){
+        html += `<h3>🔮 Follow-up Suggestions</h3><ul>`;
+        for(const s of plan.follow_up_suggestions){ html += `<li>${escapeHTML(s)}</li>`; }
+        html += `</ul>`;
+      }
+
+      respContent.innerHTML = html;
+      respSec.style.display = 'block';
+      respSec.scrollIntoView({behavior:'smooth', block:'start'});
+    }
+
+    function displayResponse(text){
+      // Clean ASCII art + format sections
+      let html = String(text)
+        .replace(/╔═+╗|╚═+╝|═+|║/g,'')
+        .replace(/--------------------------------------------------------------------------------/g,'<hr>')
+        .replace(/📝 PERSONALIZED APOLOGY MESSAGE:/g,'<h3>📝 Personalized Apology Message</h3>')
+        .replace(/📋 STRATEGY EXPLANATION:/g,'<h3>📋 Strategy Explanation</h3>')
+        .replace(/🎯 RECOMMENDED ACTIONS:/g,'<h3>🎯 Recommended Actions</h3>')
+        .replace(/💰 ESTIMATED TOTAL COST:/g,'<h3>💰 Estimated Total Cost</h3>')
+        .replace(/📊 SUCCESS PROBABILITY:/g,'<h3>📊 Success Probability</h3>')
+        .replace(/🔮 FOLLOW-UP SUGGESTIONS:/g,'<h3>🔮 Follow-up Suggestions</h3>')
+        .replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br>');
+      html = `<p>${html}</p>`;
+
+      const cost = html.match(/<h3>💰 Estimated Total Cost<\/h3>.*?\$(\d+(?:\.\d+)?)/);
+      if(cost){
+        html = html.replace(/<h3>💰 Estimated Total Cost<\/h3>.*?\$(\d+(?:\.\d+)?)/,
+          `<div class="cost-summary"><strong>💰 Estimated Total: $${cost[1]}</strong></div>`);
+      }
+      const prob = html.match(/<h3>📊 Success Probability<\/h3>.*?(\d+(?:\.\d+)?)%/);
+      if(prob){
+        html = html.replace(/<h3>📊 Success Probability<\/h3>.*?(\d+(?:\.\d+)?)%/,
+          `<div class="success-prob"><strong>📊 Success Probability: ${prob[1]}%</strong></div>`);
+      }
+
+      respContent.innerHTML = html;
+      respSec.style.display = 'block';
+      respSec.scrollIntoView({behavior:'smooth', block:'start'});
+    }
+
+    // Demo defaults
+    window.addEventListener('load', ()=>{
+      $('#situation').value = 'I forgot our anniversary dinner and made other plans';
+      $('#recipient_name').value = 'Sarah';
+      relChips.querySelector('[data-value="romantic"]').classList.add('active');
+      $('#severity').value = '8'; renderBubble();
+      $('#favorite_flowers').value = 'roses';
+      $('#favorite_cuisine').value = 'italian';
+      $('#loves_surprises').checked = true;
+      $('#budget').value = '200.00';
+      $('#location').value = 'New York, NY';
+      $('#recipient_email').value = 'sarah.connor@example.com';
+      $('#recipient_phone').value = '+18777804236';
+      count.textContent = `${$('#situation').value.length}/300`;
+    });
+  </script>
 </body>
 </html>
