@@ -440,7 +440,6 @@ async def health_check():
 @app.get("/test")
 async def test_endpoint():
     try:
-        import openai
         client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         return {"status": "ok", "openai_available": True, "api_key_set": bool(os.getenv("OPENAI_API_KEY"))}
     except Exception as e:

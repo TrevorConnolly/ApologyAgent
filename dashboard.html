@@ -281,15 +281,7 @@
       color:#fff5b1; border-color: rgba(255,237,78,.4);
     }
 
-    /* Error toast */
-    .toast{
-      position: fixed; left:50%; bottom:22px; transform: translateX(-50%) translateY(120%);
-      transition: transform .25s ease; z-index:60;
-      background: linear-gradient(135deg, rgba(239,68,68,.92), rgba(244,114,182,.92));
-      border:1px solid rgba(255,255,255,.25); color:white; box-shadow: var(--shadow);
-      padding:12px 14px; border-radius:12px; font-weight:700;
-    }
-    .toast.show{ transform: translateX(-50%) translateY(0); }
+
 
     /* Tiny helpers */
     .subtle{ color:var(--muted); font-size:12px; }
@@ -551,7 +543,7 @@
     const respSec = $('#responseSection');
     const respContent = $('#responseContent');
     const confidenceBadge = $('#confidenceBadge');
-    const toast = $('#errorToast');
+
 
     function setStatus(txt, ok=true){
       statusText.textContent = txt;
@@ -629,7 +621,7 @@
         skeleton.style.display = 'none';
         submitBtn.disabled = false;
         setStatus('Error', false);
-        showToast(`Error: ${err.message}. Make sure the API server is running on localhost:8001.`);
+        console.error('Error:', err.message);
       }
     });
 
@@ -731,7 +723,7 @@
 
     async function toggleVoiceSession(){
       if(!$('#situation').value.trim()){
-        showToast('Please fill out the "What happened?" field before starting voice coaching.');
+        console.error('Please fill out the "What happened?" field before starting voice coaching.');
         return;
       }
 
@@ -810,7 +802,7 @@
 
       } catch(error) {
         console.error('Error starting voice session:', error);
-        showToast(`Failed to start voice session: ${error.message}`);
+        console.error(`Failed to start voice session: ${error.message}`);
         voiceBtn.disabled = false;
         voiceBtnText.textContent = '🎙️ Start Voice Coaching';
         voiceStatus.style.display = 'none';
@@ -844,7 +836,7 @@
 
       } catch(error) {
         console.error('Failed to start native recording:', error);
-        showToast('Failed to access microphone. Please check permissions.');
+        console.error('Failed to access microphone. Please check permissions.');
         $('#voiceBtn').disabled = false;
         voiceBtnText.textContent = '🎙️ Start Voice Coaching';
         $('#voiceStatus').style.display = 'none';
@@ -893,7 +885,7 @@
 
       } catch(error) {
         console.error('Analysis failed:', error);
-        showToast('Analysis failed. Please try again.');
+        console.error('Analysis failed. Please try again.');
         voiceStatusText.textContent = 'Analysis failed. Try again.';
       }
     }
