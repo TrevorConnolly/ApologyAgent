@@ -1,0 +1,202 @@
+[project]
+name = "restaurant-kernel-agent"
+version = "1.0.0"
+description = "Production-ready restaurant reservation agent for Kernel platform using Browser Use"
+authors = [
+    { name = "Staff Engineer", email = "engineering@company.com" }
+]
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+keywords = ["browser-automation", "kernel", "restaurant-reservations", "browser-use", "ai-agent"]
+
+# Production dependencies - based on browser-use documentation and production patterns
+dependencies = [
+    # Core Browser Use dependencies  
+    "browser-use>=0.6.1",
+    "playwright>=1.40.0",
+    
+    # LLM integrations - OpenAI primary, others for flexibility
+    "openai>=1.0.0",
+    "anthropic>=0.7.0",  # For Claude support if needed
+    
+    # Web scraping and parsing utilities
+    "beautifulsoup4>=4.12.0",
+    "requests>=2.31.0",
+    "httpx>=0.25.0",
+    
+    # Email integration for verification codes
+    "agentmail>=0.0.53",
+    
+    # Environment and configuration management
+    "python-dotenv>=1.0.0",
+    "pydantic>=2.5.0,<3.0.0",
+    "pydantic-settings>=2.1.0,<3.0.0",
+    
+    # Async and utilities
+    "aiofiles>=23.0.0",
+    
+    # Logging and monitoring (use standard library alternatives if packages not available)
+    "structlog>=23.0.0",
+    
+    # Production reliability
+    "tenacity>=8.0.0",  # Retry logic
+    "backoff>=2.0.0",   # Exponential backoff
+    
+    # System monitoring
+    "psutil>=5.9.0",
+]
+
+# Development and testing dependencies
+[project.optional-dependencies]
+dev = [
+    # Testing framework
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.0.0",
+    "pytest-mock>=3.10.0",
+    
+    # Code quality and formatting
+    "black>=23.0.0",
+    "isort>=5.12.0",
+    "flake8>=6.0.0",
+    "mypy>=1.0.0",
+    
+    # Pre-commit hooks
+    "pre-commit>=3.0.0",
+    
+    # Development utilities
+    "ipython>=8.0.0",
+    "jupyter>=1.0.0",
+]
+
+# Production extras for enhanced functionality
+production = [
+    # Enhanced observability
+    "prometheus-client>=0.17.0",
+    "opentelemetry-api>=1.20.0",
+    "opentelemetry-sdk>=1.20.0",
+    
+    # Performance monitoring
+    "psutil>=5.9.0",
+    "memory-profiler>=0.60.0",
+    
+    # Security enhancements
+    "cryptography>=41.0.0",
+    "python-jose>=3.3.0",
+]
+
+# Cloud deployment extras
+cloud = [
+    "uvicorn[standard]>=0.24.0",
+    "gunicorn>=21.0.0",
+    "fastapi>=0.104.0",  # If REST API wrapper needed
+]
+
+[project.urls]
+Homepage = "https://github.com/company/restaurant-kernel-agent"
+Repository = "https://github.com/company/restaurant-kernel-agent"
+Documentation = "https://docs.company.com/restaurant-kernel-agent"
+"Bug Reports" = "https://github.com/company/restaurant-kernel-agent/issues"
+
+# Build system configuration
+[build-system]
+requires = ["hatchling>=1.0.0"]
+build-backend = "hatchling.build"
+
+# Hatch configuration for building
+[tool.hatch.build.targets.wheel]
+packages = ["restaurant_kernel_agent.py"]
+
+# Black code formatter configuration
+[tool.black]
+line-length = 100
+target-version = ['py38', 'py39', 'py310', 'py311']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+# isort import sorting configuration
+[tool.isort]
+profile = "black"
+line_length = 100
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+
+# MyPy type checking configuration
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+# Ignore missing imports for external packages
+[[tool.mypy.overrides]]
+module = [
+    "kernel.*",
+    "browser_use.*",
+    "agentmail.*",
+    "playwright.*"
+]
+ignore_missing_imports = true
+
+# Pytest configuration
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra -q --strict-markers --strict-config"
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+asyncio_mode = "auto"
+
+# Coverage configuration
+[tool.coverage.run]
+source = ["."]
+omit = [
+    "tests/*",
+    "venv/*",
+    ".venv/*",
+    "*/site-packages/*"
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
+
+# Performance and memory profiling settings
+[tool.memory_profiler]
+precision = 3
