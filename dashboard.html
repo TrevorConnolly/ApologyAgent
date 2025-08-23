@@ -347,7 +347,7 @@
                   <button type="button" data-value="colleague" class="chip-btn">Colleague</button>
                   <button type="button" data-value="acquaintance" class="chip-btn">Acquaintance</button>
                 </div>
-                <select id="relationship_type" class="select" name="relationship_type" required aria-label="Relationship Type" style="display:none">
+                <select id="relationship_type" class="select" name="relationship_type" aria-label="Relationship Type" style="display:none">
                   <option value="">Select relationship type</option>
                   <option value="romantic">Romantic Partner</option>
                   <option value="family">Family Member</option>
@@ -421,6 +421,37 @@
             </div>
             <div class="response-content" id="responseContent"></div>
           </div>
+
+          <!-- Voice Analysis Section -->
+          <div class="response-section" id="voiceSection" style="display:none; border-top: 1px solid rgba(255,255,255,.08); margin-top: 18px; padding-top: 18px;">
+            <div class="response-header">
+              <h2 style="margin:0; font-family:'Space Grotesk';">🎙️ Practice Your Apology</h2>
+              <span class="badge" style="background: linear-gradient(135deg, rgba(124,92,255,.25), rgba(0,231,255,.25)); border-color: rgba(124,92,255,.5); color:#d1e7ff;">Voice Coach</span>
+            </div>
+            
+            <div style="margin: 14px 0;">
+              <div class="label">Coaching Focus</div>
+              <div class="chipset" id="coachingChips" role="group" aria-label="Coaching focus">
+                <button type="button" data-value="general" class="chip-btn active">General</button>
+                <button type="button" data-value="sincerity" class="chip-btn">Sincerity</button>
+                <button type="button" data-value="tone" class="chip-btn">Tone</button>
+                <button type="button" data-value="responsibility" class="chip-btn">Responsibility</button>
+              </div>
+            </div>
+
+            <div class="voice-controls" style="display: flex; gap: 12px; align-items: center; margin: 16px 0;">
+              <button id="voiceBtn" class="btn" style="flex: 1; font-size: 14px;" onclick="toggleVoiceSession()">
+                <span id="voiceBtnText">🎙️ Start Voice Coaching</span>
+              </button>
+            </div>
+
+            <div id="voiceStatus" class="ticker" style="display: none;">
+              <span class="dot" style="background: var(--accent); box-shadow: 0 0 8px var(--accent);"></span>
+              <div><strong>Voice Coach:</strong> <span id="voiceStatusText">Ready</span></div>
+            </div>
+
+            <div class="response-content" id="voiceResponseContent" style="display: none;"></div>
+          </div>
         </div>
       </div>
 
@@ -428,7 +459,7 @@
   </div>
 
   <!-- Error Toast -->
-  <div class="toast" id="errorToast">Error: Couldn’t reach API. Is the server running?</div>
+  <div class="toast" id="errorToast">Error: Couldn't reach API. Is the server running on localhost:8001?</div>
 
   <script>
     // Helpers
@@ -548,7 +579,7 @@
       };
 
       try{
-        const res = await fetch('/create-apology', {
+        const res = await fetch('http://localhost:8001/create-apology', {
           method:'POST',
           headers:{ 'Content-Type':'application/json' },
           body: JSON.stringify(payload)
@@ -574,11 +605,14 @@
           respContent.innerHTML = '<p class="subtle">No content returned.</p>';
           respSec.style.display = 'block';
         }
+        
+        // Show voice coaching section after strategy is generated
+        showVoiceSection();
       }catch(err){
         skeleton.style.display = 'none';
         submitBtn.disabled = false;
         setStatus('Error', false);
-        showToast(`Error: ${err.message}. Make sure the API server is running on localhost:8000.`);
+        showToast(`Error: ${err.message}. Make sure the API server is running on localhost:8001.`);
       }
     });
 
@@ -654,6 +688,224 @@
       respContent.innerHTML = html;
       respSec.style.display = 'block';
       respSec.scrollIntoView({behavior:'smooth', block:'start'});
+    }
+
+    // Voice Analysis Functionality
+    let isVoiceSessionActive = false;
+    let vapiClient = null;
+    let mediaRecorder = null;
+    let currentAudioBlob = null;
+    let selectedCoachingFocus = 'general';
+
+    // Coaching focus chips
+    const coachingChips = $('#coachingChips');
+    coachingChips.addEventListener('click', (e)=>{
+      const btn = e.target.closest('.chip-btn');
+      if(!btn) return;
+      $$('#coachingChips .chip-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedCoachingFocus = btn.dataset.value;
+    });
+
+    // Show voice section after strategy is generated
+    function showVoiceSection(){
+      $('#voiceSection').style.display = 'block';
+    }
+
+    async function toggleVoiceSession(){
+      if(!$('#situation').value.trim()){
+        showToast('Please fill out the "What happened?" field before starting voice coaching.');
+        return;
+      }
+
+      if(!isVoiceSessionActive){
+        await startVoiceSession();
+      } else {
+        await endVoiceSession();
+      }
+    }
+
+    async function startVoiceSession(){
+      const apologyContext = $('#situation').value;
+      const voiceBtn = $('#voiceBtn');
+      const voiceBtnText = $('#voiceBtnText');
+      const voiceStatus = $('#voiceStatus');
+      const voiceStatusText = $('#voiceStatusText');
+
+      try {
+        voiceBtn.disabled = true;
+        voiceBtnText.textContent = '🔄 Connecting...';
+        voiceStatus.style.display = 'flex';
+        voiceStatusText.textContent = 'Connecting to AI coach...';
+
+        // Try Vapi first
+        try {
+          await loadVapiSDK();
+          
+          const response = await fetch('http://localhost:8001/vapi-web-assistant', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              apology_context: apologyContext,
+              coaching_focus: selectedCoachingFocus
+            })
+          });
+
+          if(!response.ok) throw new Error(`HTTP ${response.status}`);
+          const data = await response.json();
+
+          vapiClient = new window.Vapi(data.public_key);
+          
+          vapiClient.on('call-start', () => {
+            voiceStatusText.textContent = 'Connected! Start speaking your apology...';
+            voiceBtnText.textContent = '🛑 End Session';
+            isVoiceSessionActive = true;
+            voiceBtn.disabled = false;
+          });
+
+          vapiClient.on('call-end', () => {
+            voiceStatusText.textContent = 'Session ended. Click to start a new coaching session.';
+            voiceBtnText.textContent = '🎙️ Start Voice Coaching';
+            isVoiceSessionActive = false;
+            voiceBtn.disabled = false;
+            voiceStatus.style.display = 'none';
+          });
+
+          vapiClient.on('error', (error) => {
+            console.error('Vapi error:', error);
+            voiceStatusText.textContent = 'Session error. Falling back to native recording...';
+            startNativeRecording();
+          });
+
+          vapiClient.on('message', (message) => {
+            if(message.type === 'transcript' && message.transcriptType === 'final'){
+              voiceStatusText.textContent = `AI Coach: "${message.transcript}"`;
+            }
+          });
+
+          await vapiClient.start(data.assistant_id);
+          
+        } catch(vapiError) {
+          console.warn('Vapi failed, using native recording:', vapiError);
+          voiceStatusText.textContent = 'Using native recording...';
+          await startNativeRecording();
+        }
+
+      } catch(error) {
+        console.error('Error starting voice session:', error);
+        showToast(`Failed to start voice session: ${error.message}`);
+        voiceBtn.disabled = false;
+        voiceBtnText.textContent = '🎙️ Start Voice Coaching';
+        voiceStatus.style.display = 'none';
+      }
+    }
+
+    async function startNativeRecording(){
+      const voiceBtnText = $('#voiceBtnText');
+      const voiceStatusText = $('#voiceStatusText');
+      
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        const recordedChunks = [];
+
+        mediaRecorder.ondataavailable = (event) => {
+          if(event.data.size > 0) recordedChunks.push(event.data);
+        };
+
+        mediaRecorder.onstop = async () => {
+          currentAudioBlob = new Blob(recordedChunks, { type: 'audio/wav' });
+          await analyzeRecording();
+          stream.getTracks().forEach(track => track.stop());
+        };
+
+        mediaRecorder.start();
+        voiceStatusText.textContent = 'Recording... Speak your apology clearly';
+        voiceBtnText.textContent = '🛑 Stop Recording';
+        isVoiceSessionActive = true;
+        $('#voiceBtn').disabled = false;
+
+      } catch(error) {
+        console.error('Failed to start native recording:', error);
+        showToast('Failed to access microphone. Please check permissions.');
+        $('#voiceBtn').disabled = false;
+        voiceBtnText.textContent = '🎙️ Start Voice Coaching';
+        $('#voiceStatus').style.display = 'none';
+      }
+    }
+
+    async function analyzeRecording(){
+      if(!currentAudioBlob) return;
+
+      const voiceResponseContent = $('#voiceResponseContent');
+      const voiceStatusText = $('#voiceStatusText');
+      
+      try {
+        voiceStatusText.textContent = 'Analyzing your apology...';
+        
+        const formData = new FormData();
+        formData.append('file', currentAudioBlob, 'apology.wav');
+
+        const response = await fetch('http://localhost:8001/analyze-audio', {
+          method: 'POST',
+          body: formData
+        });
+
+        if(!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+
+        if(data.success){
+          voiceResponseContent.innerHTML = `
+            <h3 style="color: var(--accent); margin: 16px 0 8px;">🎙️ Your Recorded Apology Analysis</h3>
+            
+            <div style="background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); border-radius: 12px; padding: 14px; margin: 14px 0;">
+              <h4 style="margin: 0 0 8px; color: #dfe3ff;">📝 What You Said:</h4>
+              <p style="margin: 0; font-style: italic; color: var(--muted);">"${escapeHTML(data.transcript)}"</p>
+            </div>
+            
+            <div style="background: rgba(124,92,255,.08); border: 1px solid rgba(124,92,255,.25); border-radius: 12px; padding: 14px; margin: 14px 0;">
+              <h4 style="margin: 0 0 8px; color: #dfe3ff;">📊 AI Coaching Feedback:</h4>
+              <div style="line-height: 1.6; color: var(--text);">${escapeHTML(data.analysis).replace(/\n/g, '<br>')}</div>
+            </div>
+          `;
+          voiceResponseContent.style.display = 'block';
+          voiceStatusText.textContent = 'Analysis complete! Record another to practice more.';
+        } else {
+          throw new Error('Analysis failed');
+        }
+
+      } catch(error) {
+        console.error('Analysis failed:', error);
+        showToast('Analysis failed. Please try again.');
+        voiceStatusText.textContent = 'Analysis failed. Try again.';
+      }
+    }
+
+    async function endVoiceSession(){
+      if(vapiClient) {
+        vapiClient.stop();
+        vapiClient = null;
+      }
+      
+      if(mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+      }
+
+      isVoiceSessionActive = false;
+      $('#voiceBtnText').textContent = '🎙️ Start Voice Coaching';
+      $('#voiceBtn').disabled = false;
+      $('#voiceStatus').style.display = 'none';
+    }
+
+    async function loadVapiSDK(){
+      if(window.Vapi) return;
+      
+      try {
+        const { Vapi } = await import('https://cdn.skypack.dev/@vapi-ai/web');
+        window.Vapi = Vapi;
+      } catch(error) {
+        throw new Error('Failed to load Vapi SDK');
+      }
     }
 
     // Demo defaults

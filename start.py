@@ -21,16 +21,16 @@ def main():
     print("   • Multi-step reconciliation strategies")
     print("   • Context-aware approach based on relationship type and severity")
     print("━" * 80)
-    print("🌐 Server will be available at: http://localhost:8000")
-    print("📚 API Documentation: http://localhost:8000/docs")
-    print("❤️  Health Check: http://localhost:8000/health")
+    print("🌐 Server will be available at: http://localhost:8001")
+    print("📚 API Documentation: http://localhost:8001/docs")
+    print("❤️  Health Check: http://localhost:8001/health")
     print("━" * 80)
     
     try:
         uvicorn.run(
             "app:app", 
             host="0.0.0.0", 
-            port=8000, 
+            port=8001, 
             reload=True,
             log_level="info"
         )
