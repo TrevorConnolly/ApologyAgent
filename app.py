@@ -14,10 +14,15 @@ import requests
 import openai
 
 from dotenv import load_dotenv
+from apology_agents.peace_agent import PeaceOfferingAgent
+from models.apology_context import ApologyContext, ApologyResponse, RelationshipType
 
 load_dotenv()
 
 app = FastAPI(title="Peace Offering Agent", version="1.0.0")
+
+# Initialize the peace agent
+peace_agent = PeaceOfferingAgent()
 
 app.add_middleware(
     CORSMiddleware,
@@ -57,50 +62,59 @@ class VapiWebAssistantRequest(BaseModel):
 @app.post("/create-apology")
 async def create_apology(request: ApologyRequest):
     try:
-        # Initialize OpenAI client for generating apology strategy
-        client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-        
-        # Create a prompt for generating the apology strategy
-        strategy_prompt = f"""
-        Create a comprehensive apology strategy for this situation:
-        
-        Situation: {request.situation}
-        Recipient: {request.recipient_name} ({request.relationship_type})
-        Severity: {request.severity}/10
-        Budget: ${request.budget}
-        Location: {request.location}
-        Preferences: {json.dumps(request.recipient_preferences)}
-        
-        Please provide:
-        1. A personalized apology message
-        2. Strategy explanation
-        3. 3-5 recommended actions with priorities and estimated costs
-        4. Success probability estimate
-        5. Follow-up suggestions
-        
-        Format the response as a detailed plan.
-        """
-        
-        response = client.chat.completions.create(
-            model="gpt-4",
-            messages=[
-                {"role": "system", "content": "You are an expert relationship counselor and communication specialist who creates personalized apology strategies."},
-                {"role": "user", "content": strategy_prompt}
-            ]
+        context = ApologyContext(
+            situation=request.situation,
+            recipient_name=request.recipient_name,
+            relationship_type=request.relationship_type,
+            severity=request.severity,
+            recipient_preferences=request.recipient_preferences or {},
+            budget=request.budget,
+            location=request.location
         )
         
-        apology_strategy = response.choices[0].message.content
+        response = await peace_agent.create_apology_plan(context)
         
-        # Format response as pretty printed text
+        # Format response as pretty printed text (matching original format)
         formatted_response = f"""
 ╔═══════════════════════════════════════════════════════════════════════════════╗
 ║                            🕊️  APOLOGY STRATEGY PLAN  🕊️                        ║
 ╚═══════════════════════════════════════════════════════════════════════════════╝
 
-{apology_strategy}
+📝 PERSONALIZED APOLOGY MESSAGE:
+{'-' * 80}
+{response.apology_message}
 
+📋 STRATEGY EXPLANATION:
+{'-' * 80}
+{response.strategy_explanation}
+
+🎯 RECOMMENDED ACTIONS:
 {'-' * 80}
 """
+        
+        for i, action in enumerate(response.recommended_actions, 1):
+            priority_stars = "⭐" * action.priority
+            cost_text = f"${action.estimated_cost:.2f}" if action.estimated_cost else "Free"
+            formatted_response += f"""
+{i}. {action.description.upper()}
+   Type: {action.type.value}
+   Priority: {priority_stars} ({action.priority}/5)
+   Estimated Cost: {cost_text}
+   Details: {json.dumps(action.execution_details, indent=2)}
+"""
+
+        formatted_response += f"""
+💰 ESTIMATED TOTAL COST: ${response.estimated_total_cost:.2f}
+📊 SUCCESS PROBABILITY: {response.success_probability:.1%}
+
+🔮 FOLLOW-UP SUGGESTIONS:
+{'-' * 80}
+"""
+        
+        for i, suggestion in enumerate(response.follow_up_suggestions, 1):
+            formatted_response += f"{i}. {suggestion}\n"
+        
+        formatted_response += "\n" + "═" * 80
         
         return {"formatted_response": formatted_response}
     
@@ -440,8 +454,14 @@ async def health_check():
 @app.get("/test")
 async def test_endpoint():
     try:
+        # Test OpenAI availability
         client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-        return {"status": "ok", "openai_available": True, "api_key_set": bool(os.getenv("OPENAI_API_KEY"))}
+        
+        return {
+            "status": "ok", 
+            "openai_available": True,
+            "api_key_set": bool(os.getenv("OPENAI_API_KEY"))
+        }
     except Exception as e:
         return {"status": "error", "error": str(e)}
 
