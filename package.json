@@ -1,0 +1,14 @@
+{
+  "name": "apology-agent-convex",
+  "private": true,
+  "type": "module",
+  "version": "0.0.0",
+  "scripts": {
+    "convex:dev": "convex dev",
+    "convex:dev:once": "convex dev --once"
+  },
+  "devDependencies": {
+    "convex": "^1.26.1",
+    "typescript": "^5.4.0"
+  }
+}
