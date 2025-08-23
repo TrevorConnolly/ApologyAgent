@@ -398,10 +398,54 @@
             </div>
 
             <div class="cta">
-              <span class="mini-hint">Takes ~3s. We’ll generate message + actions + cost.</span>
+              <span class="mini-hint">Takes ~3s. We'll generate message + actions + cost.</span>
               <button class="btn" id="submitBtn" type="submit">🕊️ Generate Strategy</button>
             </div>
           </form>
+
+          <!-- Google Calendar Integration -->
+          <div class="form-section" id="calendarSection" style="margin-top: 20px; padding: 18px; border-radius: var(--radius); background: linear-gradient(180deg, var(--glass), rgba(255,255,255,0.06)); border: 1px solid rgba(255,255,255,.10);">
+            <h3 style="margin: 0 0 12px 0; font-family: 'Space Grotesk'; color: var(--text);">📅 Google Calendar Integration</h3>
+            <div id="calendarNotConnected">
+              <p style="color: var(--muted); margin-bottom: 12px;">Connect your Google Calendar to automatically schedule follow-up reminders and apology actions.</p>
+              <button type="button" class="btn" onclick="connectCalendar()" id="connectBtn">
+                🔗 Connect Google Calendar
+              </button>
+            </div>
+            <div id="calendarConnected" style="display: none;">
+              <p style="color: var(--ok); margin-bottom: 12px;">✅ Google Calendar connected successfully!</p>
+              <button type="button" class="btn" onclick="showCreateEvent()" style="background: linear-gradient(135deg, var(--ok), #20c997);">
+                📅 Create Reminder
+              </button>
+            </div>
+            
+            <!-- Create Event Form -->
+            <div id="createEventForm" style="display: none; margin-top: 16px; padding: 16px; border: 1px solid rgba(255,255,255,.14); border-radius: 12px; background: rgba(255,255,255,.04);">
+              <h4 style="margin: 0 0 12px 0; font-family: 'Space Grotesk'; color: var(--text);">Create Calendar Reminder</h4>
+              <div class="form-grid">
+                <div class="col-6">
+                  <div class="label">Event Title</div>
+                  <input type="text" id="eventTitle" class="input" placeholder="Follow up with recipient">
+                </div>
+                <div class="col-6">
+                  <div class="label">Date & Time</div>
+                  <input type="datetime-local" id="eventDate" class="input">
+                </div>
+                <div class="col-12">
+                  <div class="label">Description</div>
+                  <textarea id="eventDescription" class="textarea" placeholder="Notes about the apology follow-up..." style="min-height: 80px;"></textarea>
+                </div>
+                <div class="col-12">
+                  <div class="label">Location (optional)</div>
+                  <input type="text" id="eventLocation" class="input" placeholder="Meeting location">
+                </div>
+              </div>
+              <div style="display: flex; gap: 10px; justify-content: center; margin-top: 16px;">
+                <button type="button" onclick="createCalendarEvent()" class="btn">📅 Create Event</button>
+                <button type="button" onclick="hideCreateEvent()" class="btn" style="background: linear-gradient(135deg, #6c757d, #5a6268); color: white;">Cancel</button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -656,7 +700,120 @@
       respSec.scrollIntoView({behavior:'smooth', block:'start'});
     }
 
-    // Demo defaults
+    // Calendar functions
+    async function checkCalendarStatus() {
+      try {
+        const response = await fetch('/calendar/status');
+        const data = await response.json();
+        
+        if (data.connected) {
+          $('#calendarConnected').style.display = 'block';
+          $('#calendarNotConnected').style.display = 'none';
+        } else {
+          $('#calendarConnected').style.display = 'none';
+          $('#calendarNotConnected').style.display = 'block';
+        }
+      } catch (error) {
+        console.error('Error checking calendar status:', error);
+        $('#calendarNotConnected').style.display = 'block';
+      }
+    }
+
+    async function connectCalendar() {
+      try {
+        $('#connectBtn').textContent = 'Connecting...';
+        $('#connectBtn').disabled = true;
+        
+        const response = await fetch('/calendar/connect');
+        const data = await response.json();
+        
+        if (data.auth_url) {
+          window.location.href = data.auth_url;
+        } else {
+          throw new Error('No auth URL received');
+        }
+      } catch (error) {
+        console.error('Error connecting calendar:', error);
+        showToast('Failed to connect calendar. Please try again.');
+        $('#connectBtn').textContent = '🔗 Connect Google Calendar';
+        $('#connectBtn').disabled = false;
+      }
+    }
+
+    function showCreateEvent() {
+      $('#createEventForm').style.display = 'block';
+      
+      const nextWeek = new Date();
+      nextWeek.setDate(nextWeek.getDate() + 7);
+      nextWeek.setHours(10, 0, 0, 0);
+      
+      const recipientName = $('#recipient_name').value || 'recipient';
+      $('#eventTitle').value = `Follow up with ${recipientName}`;
+      $('#eventDate').value = nextWeek.toISOString().slice(0, 16);
+      $('#eventDescription').value = `Check in about apology and relationship status with ${recipientName}.`;
+    }
+
+    function hideCreateEvent() {
+      $('#createEventForm').style.display = 'none';
+    }
+
+    async function createCalendarEvent() {
+      try {
+        const eventData = {
+          title: $('#eventTitle').value,
+          description: $('#eventDescription').value,
+          location: $('#eventLocation').value,
+          start_datetime: $('#eventDate').value + ':00Z',
+          user_id: 'default'
+        };
+
+        if (!eventData.title || !eventData.start_datetime) {
+          showToast('Please fill in the event title and date/time.');
+          return;
+        }
+
+        const response = await fetch('/calendar/create-event', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(eventData)
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        
+        if (result.success) {
+          showToast('✅ Calendar event created successfully!');
+          hideCreateEvent();
+          $('#eventTitle').value = '';
+          $('#eventDescription').value = '';
+          $('#eventLocation').value = '';
+          $('#eventDate').value = '';
+        } else {
+          throw new Error('Failed to create event');
+        }
+
+      } catch (error) {
+        console.error('Error creating event:', error);
+        showToast('Failed to create calendar event. Please try again.');
+      }
+    }
+
+    function checkUrlParams() {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('calendar') === 'connected') {
+        showToast('✅ Google Calendar connected successfully!');
+        window.history.replaceState({}, document.title, window.location.pathname);
+        checkCalendarStatus();
+      } else if (urlParams.get('calendar') === 'error') {
+        showToast('❌ Failed to connect Google Calendar. Please try again.');
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+
+    // Demo defaults + calendar check
     window.addEventListener('load', ()=>{
       $('#situation').value = 'I forgot our anniversary dinner and made other plans';
       $('#recipient_name').value = 'Sarah';
@@ -670,6 +827,10 @@
       $('#recipient_email').value = 'sarah.connor@example.com';
       $('#recipient_phone').value = '+18777804236';
       count.textContent = `${$('#situation').value.length}/300`;
+      
+      // Calendar functionality
+      checkCalendarStatus();
+      checkUrlParams();
     });
   </script>
 </body>
