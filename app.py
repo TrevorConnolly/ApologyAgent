@@ -1,9 +1,12 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import Dict, List, Optional
 import uvicorn
 import json
+import os
 
 from apology_agents.peace_agent import PeaceOfferingAgent
 from models.apology_context import ApologyContext, ApologyResponse
@@ -90,6 +93,21 @@ async def create_apology(request: ApologyRequest):
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/")
+async def dashboard():
+    """Serve the dashboard HTML"""
+    try:
+        with open("dashboard.html", "r", encoding="utf-8") as f:
+            html_content = f.read()
+        return HTMLResponse(content=html_content)
+    except FileNotFoundError:
+        return HTMLResponse(content="<h1>Dashboard not found. Please ensure dashboard.html exists.</h1>", status_code=404)
+
+@app.get("/dashboard")
+async def dashboard_alt():
+    """Alternative dashboard endpoint"""
+    return await dashboard()
 
 @app.get("/health")
 async def health_check():

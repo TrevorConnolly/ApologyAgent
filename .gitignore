@@ -2,6 +2,9 @@
 __pycache__/
 *.py[cod]
 *$py.class
+*.pyc
+*.pyo
+*.pyd
 
 # C extensions
 *.so
@@ -128,6 +131,12 @@ ENV/
 env.bak/
 venv.bak/
 .apology_agent/
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
 
 # Spyder project settings
 .spyderproject
@@ -152,6 +161,9 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+__pycache__/app.cpython-312.pyc
+
 
 # PyCharm
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
