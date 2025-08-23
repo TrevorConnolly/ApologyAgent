@@ -223,13 +223,28 @@
     /* Right column: live preview + results */
     .preview{
       padding:18px 18px 8px;
-      display:grid; gap:14px;
+      display:flex; flex-direction:column; gap:14px;
     }
     .ticker{
       display:flex; gap:8px; align-items:center; padding:10px 12px;
       border-radius:12px; background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);
       font-size:13px;
     }
+    /* Make the entire right column scrollable and keep voice section at bottom */
+    .right-col{ display:flex; flex-direction:column; height: calc(100vh - 160px); }
+    .right-col .preview{ flex:1; overflow:auto; }
+    /* Mirror for left column so voice dock sits at bottom-left */
+    .left-col{ display:flex; flex-direction:column; height: calc(100vh - 160px); }
+    .left-col .content{ flex:1; overflow:auto; }
+    /* Bottom dock for voice section */
+    .voice-dock{ border-top: 1px solid rgba(255,255,255,.08); padding:18px; }
+    @media (max-width: 960px){ .right-col{ height:auto; } .left-col{ height:auto; } }
+    /* Tighter reading width for content */
+    .response-content{ max-width: 68ch; }
+    /* Voice coaching toolbar */
+    .voice-toolbar{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; justify-content: space-between; }
+    .voice-toolbar .left{ flex: 1 1 auto; min-width: 280px; }
+    .voice-toolbar .btn{ font-size:14px; min-width: 200px; }
     .dot{ width:8px; height:8px; border-radius:999px; background: var(--ok); box-shadow: 0 0 8px var(--ok);}
     .ticker strong{ font-weight:800; letter-spacing:.3px; }
 
@@ -306,7 +321,7 @@
     <div class="grid">
 
       <!-- LEFT: FORM -->
-      <div class="card">
+      <div class="card left-col">
         <div class="hero">
           <div>
             <h1>Create a meaningful apology, without cringe</h1>
@@ -403,10 +418,38 @@
             </div>
           </form>
         </div>
+        <!-- Bottom voice dock inside left column card -->
+        <div class="voice-dock">
+          <div class="response-section" id="voiceSection" style="display:none;">
+            <div class="response-header">
+              <h2 style="margin:0; font-family:'Space Grotesk';">🎙️ Practice Your Apology</h2>
+              <span class="badge" style="background: linear-gradient(135deg, rgba(124,92,255,.25), rgba(0,231,255,.25)); border-color: rgba(124,92,255,.5); color:#d1e7ff;">Voice Coach</span>
+            </div>
+            <div class="voice-toolbar">
+              <div class="left">
+                <div class="label">Coaching Focus</div>
+                <div class="chipset" id="coachingChips" role="group" aria-label="Coaching focus">
+                  <button type="button" data-value="general" class="chip-btn active">General</button>
+                  <button type="button" data-value="sincerity" class="chip-btn">Sincerity</button>
+                  <button type="button" data-value="tone" class="chip-btn">Tone</button>
+                  <button type="button" data-value="responsibility" class="chip-btn">Responsibility</button>
+                </div>
+              </div>
+              <button id="voiceBtn" class="btn" onclick="toggleVoiceSession()" aria-pressed="false">
+                <span id="voiceBtnText">🎙️ Start Voice Coaching</span>
+              </button>
+            </div>
+            <div id="voiceStatus" class="ticker" style="display: none;">
+              <span class="dot" style="background: var(--accent); box-shadow: 0 0 8px var(--accent);"></span>
+              <div><strong>Voice Coach:</strong> <span id="voiceStatusText">Ready</span></div>
+            </div>
+            <div class="response-content" id="voiceResponseContent" style="display: none;"></div>
+          </div>
+        </div>
       </div>
 
       <!-- RIGHT: PREVIEW + RESPONSE -->
-      <div class="card">
+      <div class="card right-col">
         <div class="preview">
           <div class="ticker">
             <span class="dot" id="statusDot"></span>
@@ -421,45 +464,13 @@
             </div>
             <div class="response-content" id="responseContent"></div>
           </div>
-
-          <!-- Voice Analysis Section -->
-          <div class="response-section" id="voiceSection" style="display:none; border-top: 1px solid rgba(255,255,255,.08); margin-top: 18px; padding-top: 18px;">
-            <div class="response-header">
-              <h2 style="margin:0; font-family:'Space Grotesk';">🎙️ Practice Your Apology</h2>
-              <span class="badge" style="background: linear-gradient(135deg, rgba(124,92,255,.25), rgba(0,231,255,.25)); border-color: rgba(124,92,255,.5); color:#d1e7ff;">Voice Coach</span>
-            </div>
-            
-            <div style="margin: 14px 0;">
-              <div class="label">Coaching Focus</div>
-              <div class="chipset" id="coachingChips" role="group" aria-label="Coaching focus">
-                <button type="button" data-value="general" class="chip-btn active">General</button>
-                <button type="button" data-value="sincerity" class="chip-btn">Sincerity</button>
-                <button type="button" data-value="tone" class="chip-btn">Tone</button>
-                <button type="button" data-value="responsibility" class="chip-btn">Responsibility</button>
-              </div>
-            </div>
-
-            <div class="voice-controls" style="display: flex; gap: 12px; align-items: center; margin: 16px 0;">
-              <button id="voiceBtn" class="btn" style="flex: 1; font-size: 14px;" onclick="toggleVoiceSession()">
-                <span id="voiceBtnText">🎙️ Start Voice Coaching</span>
-              </button>
-            </div>
-
-            <div id="voiceStatus" class="ticker" style="display: none;">
-              <span class="dot" style="background: var(--accent); box-shadow: 0 0 8px var(--accent);"></span>
-              <div><strong>Voice Coach:</strong> <span id="voiceStatusText">Ready</span></div>
-            </div>
-
-            <div class="response-content" id="voiceResponseContent" style="display: none;"></div>
-          </div>
         </div>
       </div>
 
     </div>
   </div>
 
-  <!-- Error Toast -->
-  <div class="toast" id="errorToast">Error: Couldn't reach API. Is the server running on localhost:8001?</div>
+  <!-- Error Toast removed: fallback to status ticker -->
 
   <script>
     // Helpers
@@ -549,9 +560,15 @@
     }
 
     function showToast(msg){
-      toast.textContent = msg;
-      toast.classList.add('show');
-      setTimeout(()=> toast.classList.remove('show'), 2200);
+      // Toast UI removed — use status ticker as primary surface
+      setStatus(msg, false);
+      if (toast) {
+        toast.textContent = msg;
+        toast.classList.add('show');
+        setTimeout(()=> toast.classList.remove('show'), 2200);
+      } else {
+        console.warn('Toast:', msg);
+      }
     }
 
     form.addEventListener('submit', async (e)=>{
