@@ -205,6 +205,8 @@ Desktop.ini
 *.log
 logs/
 
+/node_modules
+
 # API keys and secrets
 .env.local
 .env.production
