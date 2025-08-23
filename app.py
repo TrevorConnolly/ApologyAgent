@@ -7,11 +7,11 @@ from typing import Dict, List, Optional
 import uvicorn
 import json
 import os
-import anthropic
 import base64
 import io
 import tempfile
 import requests
+import openai
 
 from dotenv import load_dotenv
 
@@ -35,6 +35,8 @@ class ApologyRequest(BaseModel):
     recipient_preferences: Optional[Dict] = None
     budget: Optional[float] = None
     location: Optional[str] = None
+    recipient_email: Optional[str] = None
+    recipient_phone: Optional[str] = None
 
 class ApologyReviewRequest(BaseModel):
     apology_text: str
@@ -103,6 +105,7 @@ async def create_apology(request: ApologyRequest):
         return {"formatted_response": formatted_response}
     
     except Exception as e:
+        print(f"Error in create_apology: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/")
@@ -433,6 +436,15 @@ Remember: This is voice-based coaching, so focus on delivery, tone, and how the 
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "agent": "Peace Offering Agent"}
+
+@app.get("/test")
+async def test_endpoint():
+    try:
+        import openai
+        client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        return {"status": "ok", "openai_available": True, "api_key_set": bool(os.getenv("OPENAI_API_KEY"))}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
 
 if __name__ == "__main__":
     uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)

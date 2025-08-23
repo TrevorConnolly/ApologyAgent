@@ -2,37 +2,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<<<<<<< HEAD
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🕊️ Apology Agent Dashboard</title>
-    <script type="module">
-        // Load Vapi SDK dynamically
-        window.loadVapiSDK = async function() {
-            try {
-                const { Vapi } = await import('https://cdn.skypack.dev/@vapi-ai/web');
-                window.Vapi = Vapi;
-                return true;
-            } catch (error) {
-                console.warn('Vapi SDK failed to load:', error);
-                return false;
-            }
-        };
-    </script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-=======
   <meta charset="UTF-8" />
   <meta
     name="viewport"
     content="width=device-width, initial-scale=1, maximum-scale=1"
   />
   <title>🕊️ Apology Agent — Glow</title>
->>>>>>> f3af5b97b531e3ac764bbc9ce9223e62b831b770
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -308,402 +283,7 @@
     /* Hidden canvas for confetti */
     #fx { position: fixed; inset:0; pointer-events:none; z-index:55; }
 
-<<<<<<< HEAD
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .response-section {
-            display: none;
-            background: #fff;
-            border: 1px solid #e9ecef;
-            border-radius: 15px;
-            padding: 30px;
-            margin-top: 30px;
-        }
-
-        .response-header {
-            background: linear-gradient(135deg, #28a745, #20c997);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .response-content {
-            line-height: 1.6;
-            color: #495057;
-        }
-
-        .response-content h3 {
-            color: #28a745;
-            margin: 20px 0 10px 0;
-            border-bottom: 2px solid #e9ecef;
-            padding-bottom: 5px;
-        }
-
-        .response-content ul {
-            margin-left: 20px;
-            margin-bottom: 15px;
-        }
-
-        .response-content li {
-            margin-bottom: 8px;
-        }
-
-        .cost-summary {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            margin: 20px 0;
-            border-left: 4px solid #28a745;
-        }
-
-        .success-probability {
-            background: linear-gradient(135deg, #ffd700, #ffed4e);
-            color: #856404;
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-            font-weight: 600;
-            margin: 20px 0;
-        }
-
-        .error-message {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 20px 0;
-            border: 1px solid #f5c6cb;
-            display: none;
-        }
-
-        .review-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #e9ecef;
-        }
-
-        .tab-btn {
-            padding: 12px 20px;
-            border: none;
-            background: transparent;
-            color: #6c757d;
-            font-weight: 600;
-            cursor: pointer;
-            border-bottom: 2px solid transparent;
-            transition: all 0.3s ease;
-        }
-
-        .tab-btn.active {
-            color: #667eea;
-            border-bottom-color: #667eea;
-        }
-
-        .tab-btn:hover {
-            color: #667eea;
-        }
-
-        .tab-content {
-            display: none;
-            padding: 20px 0;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        .voice-practice-container {
-            display: flex;
-            flex-direction: column;
-            gap: 25px;
-        }
-
-        .practice-instructions {
-            text-align: center;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 20px;
-            border-radius: 15px;
-        }
-
-        .practice-instructions h3 {
-            margin: 0 0 10px 0;
-            font-size: 1.3rem;
-        }
-
-        .practice-instructions p {
-            margin: 0;
-            opacity: 0.9;
-        }
-
-        .audio-recorder {
-            background: #f8f9fa;
-            padding: 30px;
-            border-radius: 15px;
-            text-align: center;
-            border: 2px solid #e9ecef;
-            transition: border-color 0.3s ease;
-        }
-
-        .audio-recorder.recording {
-            border-color: #28a745;
-            background: #f8fff8;
-        }
-
-        .record-btn {
-            background: linear-gradient(135deg, #dc3545, #c82333);
-            color: white;
-            border: none;
-            padding: 20px 40px;
-            border-radius: 60px;
-            font-size: 1.2rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-bottom: 15px;
-            min-width: 200px;
-            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.2);
-        }
-
-        .record-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 25px rgba(220, 53, 69, 0.4);
-        }
-
-        .record-btn.recording {
-            background: linear-gradient(135deg, #28a745, #20c997);
-            animation: pulse 2s infinite;
-            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
-        }
-
-        .record-btn.processing {
-            background: linear-gradient(135deg, #ffc107, #ffb302);
-            cursor: not-allowed;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1) translateY(-3px); }
-            50% { transform: scale(1.05) translateY(-3px); }
-            100% { transform: scale(1) translateY(-3px); }
-        }
-
-        .recording-status {
-            font-size: 1rem;
-            font-weight: 600;
-            color: #6c757d;
-            min-height: 25px;
-            margin-bottom: 10px;
-        }
-
-        .recording-status.recording {
-            color: #28a745;
-        }
-
-        .recording-timer {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #dc3545;
-            font-family: 'Courier New', monospace;
-            min-height: 30px;
-        }
-
-        .quick-tips {
-            background: #fff3cd;
-            padding: 20px;
-            border-radius: 10px;
-            border-left: 4px solid #ffc107;
-        }
-
-        .quick-tips h4 {
-            margin: 0 0 15px 0;
-            color: #856404;
-        }
-
-        .quick-tips ul {
-            margin: 0;
-            padding-left: 20px;
-            color: #856404;
-        }
-
-        .quick-tips li {
-            margin-bottom: 8px;
-        }
-
-        .file-upload {
-            margin-bottom: 20px;
-        }
-
-        .upload-label {
-            display: block;
-            font-weight: 600;
-            color: #495057;
-            margin-bottom: 8px;
-        }
-
-        .vapi-description {
-            background: #e7f3ff;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border-left: 4px solid #007bff;
-            color: #004085;
-        }
-
-        #reviewResponse {
-            margin-top: 20px;
-        }
-
-        .analysis-header {
-            background: linear-gradient(135deg, #28a745, #20c997);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-            margin-bottom: 25px;
-        }
-
-        .transcript-section, .analysis-section {
-            margin-bottom: 25px;
-        }
-
-        .transcript-box {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            border-left: 4px solid #667eea;
-            font-style: italic;
-            font-size: 1.1rem;
-            line-height: 1.6;
-            margin-top: 10px;
-        }
-
-        .analysis-content {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            border: 1px solid #e9ecef;
-            margin-top: 10px;
-        }
-
-        .overall-score {
-            background: linear-gradient(135deg, #ffd700, #ffed4e);
-            color: #856404;
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-            font-size: 1.2rem;
-            margin: 20px 0;
-        }
-
-        .big-score {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #dc3545;
-        }
-
-        .score {
-            background: #007bff;
-            color: white;
-            padding: 3px 8px;
-            border-radius: 15px;
-            font-weight: bold;
-            font-size: 0.9rem;
-        }
-
-        .feedback-point {
-            margin: 15px 0;
-            padding: 10px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            border-left: 3px solid #007bff;
-        }
-
-        .strengths-section {
-            background: #d4edda;
-            padding: 15px;
-            border-radius: 8px;
-            border-left: 4px solid #28a745;
-            margin: 15px 0;
-        }
-
-        .improvement-section {
-            background: #fff3cd;
-            padding: 15px;
-            border-radius: 8px;
-            border-left: 4px solid #ffc107;
-            margin: 15px 0;
-        }
-
-        .suggestions-section {
-            background: #e7f3ff;
-            padding: 15px;
-            border-radius: 8px;
-            border-left: 4px solid #007bff;
-            margin: 15px 0;
-        }
-
-        .highlight {
-            background: #fff3cd;
-            padding: 2px 6px;
-            border-radius: 4px;
-            color: #856404;
-        }
-
-        .practice-again {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-            margin-top: 25px;
-        }
-
-        .practice-again strong {
-            color: #ffd700;
-        }
-
-        @media (max-width: 768px) {
-            .content {
-                padding: 20px;
-            }
-            
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .preferences-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .header h1 {
-                font-size: 2rem;
-            }
-
-            .review-tabs {
-                flex-direction: column;
-            }
-
-            .tab-btn {
-                text-align: left;
-                border-bottom: 1px solid #e9ecef;
-                border-radius: 5px;
-                margin-bottom: 5px;
-            }
-
-            .tab-btn.active {
-                background: #f8f9fa;
-                border-color: #667eea;
-            }
-        }
-    </style>
-=======
   </style>
->>>>>>> f3af5b97b531e3ac764bbc9ce9223e62b831b770
 </head>
 <body>
   <canvas id="fx"></canvas>
@@ -767,7 +347,7 @@
                   <button type="button" data-value="colleague" class="chip-btn">Colleague</button>
                   <button type="button" data-value="acquaintance" class="chip-btn">Acquaintance</button>
                 </div>
-                <select id="relationship_type" class="select" name="relationship_type" required aria-label="Relationship Type" style="display:none">
+                <select id="relationship_type" class="select" name="relationship_type" aria-label="Relationship Type" style="display:none">
                   <option value="">Select relationship type</option>
                   <option value="romantic">Romantic Partner</option>
                   <option value="family">Family Member</option>
@@ -817,89 +397,11 @@
 
             </div>
 
-<<<<<<< HEAD
-            <!-- Apology Review Section -->
-            <div class="form-section" id="reviewSection">
-                <h2>🎤 Apology Review & Voice Analysis</h2>
-                <p style="margin-bottom: 20px; color: #6c757d;">Practice and get feedback on your apology with AI-powered analysis</p>
-                
-                <div class="review-tabs">
-                    <button class="tab-btn active" onclick="switchTab('text')">📝 Text Review</button>
-                    <button class="tab-btn" onclick="switchTab('vapi')">🎙️ Voice Analysis with AI Coach</button>
-                </div>
-
-                <!-- Text Review Tab -->
-                <div id="textReviewTab" class="tab-content active">
-                    <div class="form-group">
-                        <label for="apologyText">Your Apology:</label>
-                        <textarea id="apologyText" placeholder="Type or paste your apology here for AI-powered feedback..." rows="6"></textarea>
-                    </div>
-                    <button type="button" class="submit-btn" onclick="reviewApology()">📝 Analyze Text</button>
-                </div>
-
-                <!-- Vapi Voice Analysis Tab -->
-                <div id="vapiTab" class="tab-content">
-                    <div class="voice-practice-container">
-                        <div class="practice-instructions">
-                            <h3>🎯 AI Voice Coach Session</h3>
-                            <p>Practice your apology directly in your browser and get real-time AI feedback!</p>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="coachingFocus">Coaching Focus</label>
-                            <select id="coachingFocus">
-                                <option value="general">General feedback</option>
-                                <option value="sincerity">Focus on sincerity</option>
-                                <option value="responsibility">Taking responsibility</option>
-                                <option value="tone">Tone and delivery</option>
-                                <option value="structure">Apology structure</option>
-                            </select>
-                        </div>
-                        
-                        <div class="audio-recorder" id="vapiAudioContainer">
-                            <button id="vapiVoiceBtn" class="record-btn" onclick="toggleVapiVoiceSession()">
-                                <span id="vapiVoiceBtnText">🎙️ Start Voice Coaching</span>
-                            </button>
-                            <div id="vapiStatus" class="recording-status"></div>
-                            <div id="vapiConnectionStatus" class="recording-timer"></div>
-                        </div>
-                        
-                        <div class="quick-tips">
-                            <h4>💡 Session Tips:</h4>
-                            <ul>
-                                <li>Allow microphone access when prompted</li>
-                                <li>Speak clearly and naturally</li>
-                                <li>Listen to the AI coach's feedback carefully</li>
-                                <li>Practice multiple times to improve</li>
-                                <li>The AI coach will guide you through the entire process</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="loading" id="reviewLoading">
-                    <div class="spinner"></div>
-                    <p>Analyzing your apology...</p>
-                </div>
-
-                <div class="error-message" id="reviewError"></div>
-
-                <div class="response-section" id="reviewResponse">
-                    <div class="response-header">
-                        <h2 id="reviewResponseTitle">📊 Apology Analysis</h2>
-                    </div>
-                    <div class="response-content" id="reviewResponseContent">
-                        <!-- Review content will be inserted here -->
-                    </div>
-                </div>
-            </div>
-=======
             <div class="cta">
               <span class="mini-hint">Takes ~3s. We’ll generate message + actions + cost.</span>
               <button class="btn" id="submitBtn" type="submit">🕊️ Generate Strategy</button>
             </div>
           </form>
->>>>>>> f3af5b97b531e3ac764bbc9ce9223e62b831b770
         </div>
       </div>
 
@@ -919,6 +421,37 @@
             </div>
             <div class="response-content" id="responseContent"></div>
           </div>
+
+          <!-- Voice Analysis Section -->
+          <div class="response-section" id="voiceSection" style="display:none; border-top: 1px solid rgba(255,255,255,.08); margin-top: 18px; padding-top: 18px;">
+            <div class="response-header">
+              <h2 style="margin:0; font-family:'Space Grotesk';">🎙️ Practice Your Apology</h2>
+              <span class="badge" style="background: linear-gradient(135deg, rgba(124,92,255,.25), rgba(0,231,255,.25)); border-color: rgba(124,92,255,.5); color:#d1e7ff;">Voice Coach</span>
+            </div>
+            
+            <div style="margin: 14px 0;">
+              <div class="label">Coaching Focus</div>
+              <div class="chipset" id="coachingChips" role="group" aria-label="Coaching focus">
+                <button type="button" data-value="general" class="chip-btn active">General</button>
+                <button type="button" data-value="sincerity" class="chip-btn">Sincerity</button>
+                <button type="button" data-value="tone" class="chip-btn">Tone</button>
+                <button type="button" data-value="responsibility" class="chip-btn">Responsibility</button>
+              </div>
+            </div>
+
+            <div class="voice-controls" style="display: flex; gap: 12px; align-items: center; margin: 16px 0;">
+              <button id="voiceBtn" class="btn" style="flex: 1; font-size: 14px;" onclick="toggleVoiceSession()">
+                <span id="voiceBtnText">🎙️ Start Voice Coaching</span>
+              </button>
+            </div>
+
+            <div id="voiceStatus" class="ticker" style="display: none;">
+              <span class="dot" style="background: var(--accent); box-shadow: 0 0 8px var(--accent);"></span>
+              <div><strong>Voice Coach:</strong> <span id="voiceStatusText">Ready</span></div>
+            </div>
+
+            <div class="response-content" id="voiceResponseContent" style="display: none;"></div>
+          </div>
         </div>
       </div>
 
@@ -926,7 +459,7 @@
   </div>
 
   <!-- Error Toast -->
-  <div class="toast" id="errorToast">Error: Couldn’t reach API. Is the server running?</div>
+  <div class="toast" id="errorToast">Error: Couldn't reach API. Is the server running on localhost:8001?</div>
 
   <script>
     // Helpers
@@ -1046,7 +579,7 @@
       };
 
       try{
-        const res = await fetch('/create-apology', {
+        const res = await fetch('http://localhost:8001/create-apology', {
           method:'POST',
           headers:{ 'Content-Type':'application/json' },
           body: JSON.stringify(payload)
@@ -1072,11 +605,14 @@
           respContent.innerHTML = '<p class="subtle">No content returned.</p>';
           respSec.style.display = 'block';
         }
+        
+        // Show voice coaching section after strategy is generated
+        showVoiceSection();
       }catch(err){
         skeleton.style.display = 'none';
         submitBtn.disabled = false;
         setStatus('Error', false);
-        showToast(`Error: ${err.message}. Make sure the API server is running on localhost:8000.`);
+        showToast(`Error: ${err.message}. Make sure the API server is running on localhost:8001.`);
       }
     });
 
@@ -1154,6 +690,224 @@
       respSec.scrollIntoView({behavior:'smooth', block:'start'});
     }
 
+    // Voice Analysis Functionality
+    let isVoiceSessionActive = false;
+    let vapiClient = null;
+    let mediaRecorder = null;
+    let currentAudioBlob = null;
+    let selectedCoachingFocus = 'general';
+
+    // Coaching focus chips
+    const coachingChips = $('#coachingChips');
+    coachingChips.addEventListener('click', (e)=>{
+      const btn = e.target.closest('.chip-btn');
+      if(!btn) return;
+      $$('#coachingChips .chip-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedCoachingFocus = btn.dataset.value;
+    });
+
+    // Show voice section after strategy is generated
+    function showVoiceSection(){
+      $('#voiceSection').style.display = 'block';
+    }
+
+    async function toggleVoiceSession(){
+      if(!$('#situation').value.trim()){
+        showToast('Please fill out the "What happened?" field before starting voice coaching.');
+        return;
+      }
+
+      if(!isVoiceSessionActive){
+        await startVoiceSession();
+      } else {
+        await endVoiceSession();
+      }
+    }
+
+    async function startVoiceSession(){
+      const apologyContext = $('#situation').value;
+      const voiceBtn = $('#voiceBtn');
+      const voiceBtnText = $('#voiceBtnText');
+      const voiceStatus = $('#voiceStatus');
+      const voiceStatusText = $('#voiceStatusText');
+
+      try {
+        voiceBtn.disabled = true;
+        voiceBtnText.textContent = '🔄 Connecting...';
+        voiceStatus.style.display = 'flex';
+        voiceStatusText.textContent = 'Connecting to AI coach...';
+
+        // Try Vapi first
+        try {
+          await loadVapiSDK();
+          
+          const response = await fetch('http://localhost:8001/vapi-web-assistant', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              apology_context: apologyContext,
+              coaching_focus: selectedCoachingFocus
+            })
+          });
+
+          if(!response.ok) throw new Error(`HTTP ${response.status}`);
+          const data = await response.json();
+
+          vapiClient = new window.Vapi(data.public_key);
+          
+          vapiClient.on('call-start', () => {
+            voiceStatusText.textContent = 'Connected! Start speaking your apology...';
+            voiceBtnText.textContent = '🛑 End Session';
+            isVoiceSessionActive = true;
+            voiceBtn.disabled = false;
+          });
+
+          vapiClient.on('call-end', () => {
+            voiceStatusText.textContent = 'Session ended. Click to start a new coaching session.';
+            voiceBtnText.textContent = '🎙️ Start Voice Coaching';
+            isVoiceSessionActive = false;
+            voiceBtn.disabled = false;
+            voiceStatus.style.display = 'none';
+          });
+
+          vapiClient.on('error', (error) => {
+            console.error('Vapi error:', error);
+            voiceStatusText.textContent = 'Session error. Falling back to native recording...';
+            startNativeRecording();
+          });
+
+          vapiClient.on('message', (message) => {
+            if(message.type === 'transcript' && message.transcriptType === 'final'){
+              voiceStatusText.textContent = `AI Coach: "${message.transcript}"`;
+            }
+          });
+
+          await vapiClient.start(data.assistant_id);
+          
+        } catch(vapiError) {
+          console.warn('Vapi failed, using native recording:', vapiError);
+          voiceStatusText.textContent = 'Using native recording...';
+          await startNativeRecording();
+        }
+
+      } catch(error) {
+        console.error('Error starting voice session:', error);
+        showToast(`Failed to start voice session: ${error.message}`);
+        voiceBtn.disabled = false;
+        voiceBtnText.textContent = '🎙️ Start Voice Coaching';
+        voiceStatus.style.display = 'none';
+      }
+    }
+
+    async function startNativeRecording(){
+      const voiceBtnText = $('#voiceBtnText');
+      const voiceStatusText = $('#voiceStatusText');
+      
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        const recordedChunks = [];
+
+        mediaRecorder.ondataavailable = (event) => {
+          if(event.data.size > 0) recordedChunks.push(event.data);
+        };
+
+        mediaRecorder.onstop = async () => {
+          currentAudioBlob = new Blob(recordedChunks, { type: 'audio/wav' });
+          await analyzeRecording();
+          stream.getTracks().forEach(track => track.stop());
+        };
+
+        mediaRecorder.start();
+        voiceStatusText.textContent = 'Recording... Speak your apology clearly';
+        voiceBtnText.textContent = '🛑 Stop Recording';
+        isVoiceSessionActive = true;
+        $('#voiceBtn').disabled = false;
+
+      } catch(error) {
+        console.error('Failed to start native recording:', error);
+        showToast('Failed to access microphone. Please check permissions.');
+        $('#voiceBtn').disabled = false;
+        voiceBtnText.textContent = '🎙️ Start Voice Coaching';
+        $('#voiceStatus').style.display = 'none';
+      }
+    }
+
+    async function analyzeRecording(){
+      if(!currentAudioBlob) return;
+
+      const voiceResponseContent = $('#voiceResponseContent');
+      const voiceStatusText = $('#voiceStatusText');
+      
+      try {
+        voiceStatusText.textContent = 'Analyzing your apology...';
+        
+        const formData = new FormData();
+        formData.append('file', currentAudioBlob, 'apology.wav');
+
+        const response = await fetch('http://localhost:8001/analyze-audio', {
+          method: 'POST',
+          body: formData
+        });
+
+        if(!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+
+        if(data.success){
+          voiceResponseContent.innerHTML = `
+            <h3 style="color: var(--accent); margin: 16px 0 8px;">🎙️ Your Recorded Apology Analysis</h3>
+            
+            <div style="background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); border-radius: 12px; padding: 14px; margin: 14px 0;">
+              <h4 style="margin: 0 0 8px; color: #dfe3ff;">📝 What You Said:</h4>
+              <p style="margin: 0; font-style: italic; color: var(--muted);">"${escapeHTML(data.transcript)}"</p>
+            </div>
+            
+            <div style="background: rgba(124,92,255,.08); border: 1px solid rgba(124,92,255,.25); border-radius: 12px; padding: 14px; margin: 14px 0;">
+              <h4 style="margin: 0 0 8px; color: #dfe3ff;">📊 AI Coaching Feedback:</h4>
+              <div style="line-height: 1.6; color: var(--text);">${escapeHTML(data.analysis).replace(/\n/g, '<br>')}</div>
+            </div>
+          `;
+          voiceResponseContent.style.display = 'block';
+          voiceStatusText.textContent = 'Analysis complete! Record another to practice more.';
+        } else {
+          throw new Error('Analysis failed');
+        }
+
+      } catch(error) {
+        console.error('Analysis failed:', error);
+        showToast('Analysis failed. Please try again.');
+        voiceStatusText.textContent = 'Analysis failed. Try again.';
+      }
+    }
+
+    async function endVoiceSession(){
+      if(vapiClient) {
+        vapiClient.stop();
+        vapiClient = null;
+      }
+      
+      if(mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+      }
+
+      isVoiceSessionActive = false;
+      $('#voiceBtnText').textContent = '🎙️ Start Voice Coaching';
+      $('#voiceBtn').disabled = false;
+      $('#voiceStatus').style.display = 'none';
+    }
+
+    async function loadVapiSDK(){
+      if(window.Vapi) return;
+      
+      try {
+        const { Vapi } = await import('https://cdn.skypack.dev/@vapi-ai/web');
+        window.Vapi = Vapi;
+      } catch(error) {
+        throw new Error('Failed to load Vapi SDK');
+      }
+    }
+
     // Demo defaults
     window.addEventListener('load', ()=>{
       $('#situation').value = 'I forgot our anniversary dinner and made other plans';
@@ -1170,6 +924,5 @@
       count.textContent = `${$('#situation').value.length}/300`;
     });
   </script>
->>>>>>> f3af5b97b531e3ac764bbc9ce9223e62b831b770
 </body>
 </html>
