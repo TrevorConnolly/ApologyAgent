@@ -236,8 +236,49 @@
     /* Mirror for left column so voice dock sits at bottom-left */
     .left-col{ display:flex; flex-direction:column; height: calc(100vh - 160px); min-height: 0; }
     .left-col .content{ flex:1; overflow:auto; min-height:0; -webkit-overflow-scrolling: touch; }
-    /* Bottom dock for voice section */
-    .voice-dock{ border-top: 1px solid rgba(255,255,255,.08); padding:18px; }
+    /* Voice response content styling - now with scrolling */
+    #voiceResponseContent {
+      padding: 16px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      scrollbar-width: thin;
+      scrollbar-color: rgba(124,92,255,0.5) rgba(255,255,255,0.1);
+    }
+    
+    /* Custom scrollbar for webkit browsers */
+    #voiceResponseContent::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    #voiceResponseContent::-webkit-scrollbar-track {
+      background: rgba(255,255,255,0.1);
+      border-radius: 3px;
+    }
+    
+    #voiceResponseContent::-webkit-scrollbar-thumb {
+      background: rgba(124,92,255,0.5);
+      border-radius: 3px;
+    }
+    
+    #voiceResponseContent::-webkit-scrollbar-thumb:hover {
+      background: rgba(124,92,255,0.7);
+    }
+    
+    /* Loading spinner for voice coaching */
+    .loading-spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid rgba(255,255,255,0.1);
+      border-top: 3px solid var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
     @media (max-width: 960px){ .right-col{ height:auto; } .left-col{ height:auto; } }
     /* Tighter reading width for content */
     .response-content{ max-width: 68ch; }
@@ -409,10 +450,9 @@
               <button class="btn" id="submitBtn" type="submit">🕊️ Generate Strategy</button>
             </div>
           </form>
-        </div>
-        <!-- Bottom voice dock inside left column card -->
-        <div class="voice-dock">
-          <div class="response-section" id="voiceSection" style="display:none;">
+          
+          <!-- Voice Practice Section - Now in scrollable content area -->
+          <div class="response-section" id="voiceSection" style="display:none; margin-top: 24px; padding: 20px; background: rgba(255,255,255,0.04); border-radius: 16px; border: 1px solid rgba(255,255,255,0.08);">
             <div class="response-header">
               <h2 style="margin:0; font-family:'Space Grotesk';">🎙️ Practice Your Apology</h2>
               <span class="badge" style="background: linear-gradient(135deg, rgba(124,92,255,.25), rgba(0,231,255,.25)); border-color: rgba(124,92,255,.5); color:#d1e7ff;">Voice Coach</span>
@@ -435,7 +475,21 @@
               <span class="dot" style="background: var(--accent); box-shadow: 0 0 8px var(--accent);"></span>
               <div><strong>Voice Coach:</strong> <span id="voiceStatusText">Ready</span></div>
             </div>
-            <div class="response-content" id="voiceResponseContent" style="display: none;"></div>
+            
+            <!-- Loading indicator for voice coaching setup -->
+            <div id="voiceLoadingIndicator" style="display: none; text-align: center; padding: 20px;">
+              <div class="loading-spinner" style="margin: 0 auto 12px;"></div>
+              <div style="color: var(--muted); font-size: 14px;">Setting up your AI voice coach...</div>
+            </div>
+            
+            <!-- Loading indicator for analysis -->
+            <div id="analysisLoadingIndicator" style="display: none; text-align: center; padding: 20px; margin-top: 16px; background: rgba(255,255,255,0.04); border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
+              <div class="loading-spinner" style="margin: 0 auto 12px;"></div>
+              <div style="color: var(--muted); font-size: 14px;">Analyzing your apology...</div>
+            </div>
+            
+            <!-- Voice Analysis Results - Inside the voice section -->
+            <div class="response-content" id="voiceResponseContent" style="display: none; margin-top: 16px; max-height: 400px; overflow-y: auto;"></div>
           </div>
         </div>
       </div>
@@ -719,6 +773,10 @@
     // Show voice section after strategy is generated
     function showVoiceSection(){
       $('#voiceSection').style.display = 'block';
+      // Scroll to voice section when it appears
+      setTimeout(() => {
+        $('#voiceSection').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 100);
     }
 
     async function toggleVoiceSession(){
@@ -728,6 +786,11 @@
       }
 
       if(!isVoiceSessionActive){
+        // Show loading indicator
+        $('#voiceLoadingIndicator').style.display = 'block';
+        $('#voiceBtnText').textContent = 'Setting up...';
+        $('#voiceBtn').disabled = true;
+        
         await startVoiceSession();
       } else {
         await endVoiceSession();
@@ -766,6 +829,8 @@
           vapiClient = new window.Vapi(data.public_key);
           
           vapiClient.on('call-start', () => {
+            // Hide loading indicator
+            $('#voiceLoadingIndicator').style.display = 'none';
             voiceStatusText.textContent = 'Connected! Start speaking your apology...';
             voiceBtnText.textContent = '🛑 End Session';
             isVoiceSessionActive = true;
@@ -803,6 +868,8 @@
       } catch(error) {
         console.error('Error starting voice session:', error);
         console.error(`Failed to start voice session: ${error.message}`);
+        // Hide loading indicator on error
+        $('#voiceLoadingIndicator').style.display = 'none';
         voiceBtn.disabled = false;
         voiceBtnText.textContent = '🎙️ Start Voice Coaching';
         voiceStatus.style.display = 'none';
@@ -829,6 +896,8 @@
         };
 
         mediaRecorder.start();
+        // Hide loading indicator
+        $('#voiceLoadingIndicator').style.display = 'none';
         voiceStatusText.textContent = 'Recording... Speak your apology clearly';
         voiceBtnText.textContent = '🛑 Stop Recording';
         isVoiceSessionActive = true;
@@ -837,6 +906,8 @@
       } catch(error) {
         console.error('Failed to start native recording:', error);
         console.error('Failed to access microphone. Please check permissions.');
+        // Hide loading indicator on error
+        $('#voiceLoadingIndicator').style.display = 'none';
         $('#voiceBtn').disabled = false;
         voiceBtnText.textContent = '🎙️ Start Voice Coaching';
         $('#voiceStatus').style.display = 'none';
@@ -848,9 +919,18 @@
 
       const voiceResponseContent = $('#voiceResponseContent');
       const voiceStatusText = $('#voiceStatusText');
+      const analysisLoadingIndicator = $('#analysisLoadingIndicator');
       
       try {
+        // Show analysis loading indicator
+        analysisLoadingIndicator.style.display = 'block';
+        voiceResponseContent.style.display = 'none';
         voiceStatusText.textContent = 'Analyzing your apology...';
+        
+        // Scroll to loading indicator
+        setTimeout(() => {
+          analysisLoadingIndicator.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 100);
         
         const formData = new FormData();
         formData.append('file', currentAudioBlob, 'apology.wav');
@@ -877,8 +957,15 @@
               <div style="line-height: 1.6; color: var(--text);">${escapeHTML(data.analysis).replace(/\n/g, '<br>')}</div>
             </div>
           `;
+          // Hide loading indicator and show results
+          analysisLoadingIndicator.style.display = 'none';
           voiceResponseContent.style.display = 'block';
           voiceStatusText.textContent = 'Analysis complete! Record another to practice more.';
+          
+          // Scroll the voice analysis into view
+          setTimeout(() => {
+            voiceResponseContent.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }, 100);
         } else {
           throw new Error('Analysis failed');
         }
@@ -886,6 +973,8 @@
       } catch(error) {
         console.error('Analysis failed:', error);
         console.error('Analysis failed. Please try again.');
+        // Hide loading indicator on error
+        analysisLoadingIndicator.style.display = 'none';
         voiceStatusText.textContent = 'Analysis failed. Try again.';
       }
     }
