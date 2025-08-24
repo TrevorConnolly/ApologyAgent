@@ -10,6 +10,7 @@ The Apology Agent is designed to assist users in crafting meaningful apologies b
 
 - **🖥️ Beautiful Web Dashboard**: User-friendly interface for creating apologies without coding
 - **Personalized Apology Messages**: Generate heartfelt, context-aware apology messages
+- **Practice Delivering Apology**: Speak into voice agent and receieve feedback on the apology 
 - **Smart Gift Recommendations**: AI-powered gift suggestions based on recipient preferences
 - **Restaurant Booking**: Find and book appropriate dining venues for reconciliation
 - **Flower Delivery**: Arrange thoughtful floral arrangements
